@@ -1,78 +1,40 @@
 from flask import Flask, request, jsonify, render_template, request, redirect, url_for, flash
-from classes_auxiliares_banco import * 
+from Classes_auxiliares.classes_auxiliares_banco import Historico, Conta, Conta_conjunta, Cliente, Pessoa_fisica, Pessoa_juridica
+
+from banco import Banco
 import random
 import time
 import requests
+import os
+
+
 
 app = Flask(__name__)
 
-class Banco: 
 
-    def __init__(self, nome): 
-        self.nome = nome 
-        self._clientes = [] 
-        self._numero = 0 
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '1')
 
-    #Função responsável por verificar na lista de cliente do banco se existe o cliente passado 
-    def busca_cliente(self, identificador):
-        for cliente in self._clientes: 
-            if cliente.identificador == identificador: 
-                return cliente 
-        return False
-    
-    #Função que recebe um cpf ou cnpj e retorna todas as contas atreladas ao cliente especifico
-    def busca_contas(self,identificador): 
-        if(self._clientes): 
-            for cliente in self._clientes:
-                 if cliente.identificador == identificador: 
-                     return cliente.contas
-        return False
-    
-    #Função que recebe o numero de uma conta e retorna uma conta que exista com o mesmo numero
-    def busca_conta(self,numero): 
-        try:
-            if(self._clientes): 
-                for cliente in self._clientes:
-                    for conta in cliente.contas: 
-                        if conta.numero == numero: 
-                            return conta
-            return False
-        except Exception as e:
-            print(f"Exceção: {e}")
-            return False
+ip_banco1 = os.getenv('IP_BANCO3', '1')
+IP_BANCO1 = f"127.0.0.{ip_banco1}"
+NOME_BANCO1 = os.getenv('NOME_BANCO1', 'Banco 1') 
+PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '5000')
+URL_BANCO1 = f"http://{IP_BANCO1}:{PORTA_BANCO1}"
 
-    #Função responsável por cadastrar um cliente
-    def cadastro_cliente_conta_unica(self, cliente):
-        self._clientes.append(cliente)
-        return True
+ip_banco2 = os.getenv('IP_BANCO2', '1')
+IP_BANCO2 = f"127.0.0.{ip_banco2}"
+NOME_BANCO2 = os.getenv('NOME_BANCO2', 'Banco 2') 
+PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '5000')
+URL_BANCO2 = f"http://{IP_BANCO2}:{PORTA_BANCO2}"
 
-    #Função responsável por criar um conta
-    def criar_conta(self, conta, identificador): 
-        cliente = self.busca_cliente(identificador)
 
-        if cliente: 
-            cliente.adicionar_conta(conta)
-            return True
-        
-        return False
+ip_banco3 = os.getenv('IP_BANCO3', '1')
+IP_BANCO3 = f"127.0.0.{ip_banco3}"
+NOME_BANCO3 = os.getenv('NOME_BANCO3', 'Banco 3') 
+PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '5000')
+URL_BANCO3 = f"http://{IP_BANCO3}:{PORTA_BANCO3}"
 
-    def atualizar_numero_contas(self): 
-        self._numero += 1
 
-    @property
-    def clientes(self):
-        return self._clientes
-    
-    @property
-    def numero(self):
-        return self._numero
-    
-
-banco = Banco("ChainDesco")
-
-@app.route('/')
-def home():
-    return redirect(url_for('login'))
+banco = Banco(eval(f"NOME_BANCO{NUMERO_BANCO}"))
 
 @app.route('/cadastro_pessoa_fisica', methods=['POST'])
 def cadastrar_conta_pessoa_fisica():
@@ -88,7 +50,7 @@ def cadastrar_conta_pessoa_fisica():
         pessoa_fisica = Pessoa_fisica(nome, cpf, senha)
         conta_pessoa_fisica = Conta(banco.numero, banco.nome, pessoa_fisica)
         pessoa_fisica.adicionar_conta(conta_pessoa_fisica)
-        banco.cadastro_cliente_conta_unica(pessoa_fisica) 
+        banco.cadastro_cliente(pessoa_fisica) 
         banco.atualizar_numero_contas()
         return jsonify({'message': 'Conta Para Pessoa fisica criada com sucesso', 'cpf': pessoa_fisica.identificador, 'Numero conta': conta_pessoa_fisica.numero
                         ,'Nome do Banco': conta_pessoa_fisica.nome_banco}), 201
@@ -110,12 +72,43 @@ def cadastrar_conta_pessoa_juridica():
         pessoa_juridica = Pessoa_juridica(nome, cnpj, senha)
         conta_pessoa_juridica = Conta(banco.numero, banco.nome, pessoa_juridica)
         pessoa_juridica.adicionar_conta(conta_pessoa_juridica)
-        banco.cadastro_cliente_conta_unica(pessoa_juridica)
+        banco.cadastro_cliente(pessoa_juridica)
         banco.atualizar_numero_contas()
         return jsonify({'message': 'Conta Para Pessoa Juridica criada com sucesso', 'cnpj': pessoa_juridica.identificador , 'Numero conta': conta_pessoa_juridica.numero
                         ,'Nome do Banco': conta_pessoa_juridica.nome_banco}), 201
     except Exception as e: 
         return jsonify({'message': f'Falha ao criar pessoa juridica, Exceção:{e}'}), 500
+
+@app.route('/cadastro_conta_conjunta', methods=['POST'])
+def cadastrar_conta_conjunta():
+    data = request.get_json()
+    identificador1 = data.get('identificador1', '')
+    identificador2 = data.get('identificador2', '')
+    senha = data.get('senha', '')
+
+    if not identificador1 or not identificador2 or not senha:
+        return jsonify({'message': 'Identificadores e senha são obrigatórios'}), 400
+
+    try:
+        cliente1 = banco.busca_cliente(identificador1)
+        cliente2 = banco.busca_cliente(identificador2)
+
+        if not cliente1 or not cliente2:
+            return jsonify({'message': 'Um ou ambos os clientes não foram encontrados'}), 404
+
+        conta_conjunta = Conta_conjunta(banco.numero, banco.nome, [cliente1, cliente2])
+        cliente1.adicionar_conta(conta_conjunta)
+        cliente2.adicionar_conta(conta_conjunta)
+        banco.atualizar_numero_contas()
+        
+        return jsonify({
+            'message': 'Conta conjunta criada com sucesso',
+            'identificadores': [cliente1.identificador, cliente2.identificador],
+            'numero_conta': conta_conjunta.numero,
+            'nome_banco': conta_conjunta.nome_banco
+        }), 201
+    except Exception as e:
+        return jsonify({'message': f'Falha ao criar conta conjunta, Exceção: {e}'}), 500
 
 @app.route('/clientes', methods=['GET'])
 def get_clientes(): 
@@ -133,8 +126,8 @@ def login():
     if not identificador or not senha:
         return jsonify({'message': 'Identificador (CPF/CNPJ) e senha são obrigatórios'}), 400
 
-    cliente = banco.busca_cliente(identificador)
-    if cliente and cliente.senha == senha:
+    cliente = banco.logar_cliente(identificador, senha)
+    if cliente:
         return jsonify({'message': 'Login bem-sucedido', 'identificador': cliente.identificador, 'nome': cliente.nome}), 200
     else:
         return jsonify({'message': 'Identificador ou senha incorretos'}), 401
@@ -142,44 +135,81 @@ def login():
 @app.route('/deposito', methods=['POST'])
 def deposito():
     data = request.get_json()
-    identificador = data.get('identificador', '')
     numero_conta = data.get('numero_conta', '')
+    nome_banco = data.get('nome_banco', '')
     valor = data.get('valor', 0)
 
-    if not identificador or not numero_conta or valor <= 0:
-        return jsonify({'message': 'Identificador, número da conta e valor válido são obrigatórios'}), 400
+    if nome_banco is None or not numero_conta or valor <= 0:
+        return jsonify({'message': 'Nome do banco, número da conta e valor válido são obrigatórios'}), 400
 
     numero_conta = int(numero_conta)
 
-    cliente = banco.busca_cliente(identificador)
-    if not cliente:
-        return jsonify({'message': 'Cliente não encontrado'}), 404
+    if nome_banco == banco.nome:
+    
+        conta = banco.busca_conta(numero_conta)
+        if not conta:
+            return jsonify({'message': 'Conta não encontrada'}), 404
 
-    conta = banco.busca_conta(numero_conta)
-    if not conta or cliente not in conta.clientes:
-        return jsonify({'message': 'Conta não encontrada ou cliente não autorizado'}), 404
+        tentativas = 5
+        for tentativa in range(tentativas):
+            if tentativa > 0:
+                # Espera um tempo aleatório entre 1 e 3 segundos antes de tentar novamente
+                tempo_espera = random.randint(1, 3)
+                time.sleep(tempo_espera)
 
-    tentativas = 5
-    for tentativa in range(tentativas):
-        if tentativa > 0:
-            # Espera um tempo aleatório entre 1 e 3 segundos antes de tentar novamente
-            tempo_espera = random.randint(1, 3)
-            time.sleep(tempo_espera)
+            try:
+                codigo_execucao = conta.iniciar_transacao()
+                sucesso, mensagem = conta.depositar(valor, codigo_execucao)
+                if sucesso:
+                    conta.finalizar_transacao()
+                    return jsonify({'message': mensagem}), 200
+                else:
+                    return jsonify({'message': mensagem}), 500
+            except Exception as e:
+                if tentativa == tentativas - 1:
+                    print(f'Erro durante a transação após {tentativas} tentativas: {str(e)}')
 
-        try:
-            codigo_execucao = conta.iniciar_transacao()
-            sucesso, mensagem = conta.depositar(valor, codigo_execucao)
-            if sucesso:
-                conta.finalizar_transacao()
-                return jsonify({'message': mensagem}), 200
-            else:
-                return jsonify({'message': mensagem}), 500
-        except Exception as e:
-            if tentativa == tentativas - 1:
-                print(f'Erro durante a transação após {tentativas} tentativas: {str(e)}')
-
-    conta.finalizar_transacao()
-    return jsonify({'message': 'Todas as tentativas de depósito falharam'}), 500
+        conta.finalizar_transacao()
+        return jsonify({'message': 'Todas as tentativas de depósito falharam'}), 500
+    else: 
+        if nome_banco == NOME_BANCO1: 
+            try:
+                response = requests.post(
+                    URL_BANCO1 + '/deposito',
+                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
+                ) 
+                if response.status_code == 200:
+                    return jsonify({'message': response.json().get('message')}), 200
+                elif response.status_code == 500 or response.status_code == 404: 
+                    return jsonify({'message': response.json().get('message')}), 500
+            except Exception as e: 
+                print(f"Exceção: {e}")
+        elif nome_banco == NOME_BANCO2: 
+            try:
+                response = requests.post(
+                    URL_BANCO2 + '/deposito',
+                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
+                ) 
+                if response.status_code == 200:
+                    return jsonify({'message': response.json().get('message')}), 200
+                elif response.status_code == 500: 
+                    return jsonify({'message': response.json().get('message')}), 500
+            except Exception as e: 
+                print(f"Exceção: {e}")
+        elif nome_banco == NOME_BANCO3: 
+            try:
+                response = requests.post(
+                    URL_BANCO3 + '/deposito',
+                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
+                ) 
+                if response.status_code == 200:
+                    return jsonify({'message': response.json().get('message')}), 200
+                elif response.status_code == 500: 
+                    return jsonify({'message': response.json().get('message')}), 500
+            except Exception as e: 
+                print(f"Exceção: {e}") 
+        else: 
+            return jsonify({'message': 'Banco inexistente'}), 500
 
 @app.route('/saque', methods=['POST'])
 def saque():
@@ -249,27 +279,6 @@ def contas_cliente():
         })
 
     return jsonify({'contas': contas_info}), 200 
-
-@app.route('/nova_conta', methods=['POST'])
-def nova_conta():
-    data = request.get_json()
-    identificador = data.get('identificador', '')
-
-    if not identificador:
-        return jsonify({'message': 'Identificador (CPF) é obrigatório'}), 400
-
-    cliente = banco.busca_cliente(identificador)
-    if not cliente:
-        return jsonify({'message': 'Cliente não encontrado'}), 404
-
-    try:
-        nova_conta = Conta(banco.numero, banco.nome, cliente)
-        cliente.adicionar_conta(nova_conta)
-        banco.criar_conta(nova_conta, identificador)
-        banco.atualizar_numero_contas()
-        return jsonify({'message': 'Nova conta criada com sucesso', 'numero_conta': nova_conta.numero, 'nome_banco': nova_conta.nome_banco}), 201
-    except Exception as e:
-        return jsonify({'message': f'Falha ao criar nova conta, Exceção: {e}'}), 500
 
 @app.route('/iniciar_transacao', methods=['POST'])
 def iniciar_transacao():
@@ -431,10 +440,7 @@ def transferencia():
 
             conta_origem.finalizar_transacao()
 
-            response_finalizar_destino = requests.post(
-                url_banco_destino + '/finalizar_transacao',
-                json={'numero_conta': numero_conta_destino}
-            )
+            
             if response_finalizar_destino.status_code != 200:
                 return jsonify({'message': 'Falha ao finalizar transação no banco destino', 'detalhes': response_finalizar_destino.json()}), 500
 
@@ -555,7 +561,5 @@ def transferencia():
 
     return jsonify({'message': 'Tipo de transferência não suportada'}), 400
 
-
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
-        
+    app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

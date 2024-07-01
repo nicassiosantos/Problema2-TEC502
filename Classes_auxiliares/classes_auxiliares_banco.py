@@ -1,4 +1,5 @@
 import secrets 
+from datetime import datetime
 
 class Historico:
     def __init__(self, transacoes=None):
@@ -70,7 +71,9 @@ class ContaBase:
         self._saldo += valor
         self._historico.adicionar_transacao({
             "tipo": "Deposito",
-            "valor": valor
+            "valor": valor, 
+            "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+
         })
         return True, f'Depósito de {valor} na conta {self._numero} realizado com sucesso'
     
@@ -89,16 +92,13 @@ class ContaBase:
         })
         return True, f'Saque de {valor} realizado com sucesso'
 
-
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):
         super().__init__(numero, nome_banco, [cliente], **kw)
 
-
 class Conta_conjunta(ContaBase):
-    def __init__(self, numero, clientes, **kw):
-        super().__init__(numero, clientes, **kw)
-
+    def __init__(self, numero, nome_banco, clientes, **kw):
+        super().__init__(numero, nome_banco, clientes, **kw)
 
 class Cliente:
     def __init__(self, nome, identificador, senha, contas=None):
@@ -129,11 +129,9 @@ class Cliente:
     def senha(self):
         return self._senha
 
-
 class Pessoa_fisica(Cliente):
     def __init__(self, nome, cpf, senha, contas=None, **kw):
         super().__init__(nome, cpf, senha, contas, **kw)
-
 
 class Pessoa_juridica(Cliente):
     def __init__(self, nome, cnpj, senha, contas=None, **kw):

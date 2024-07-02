@@ -4,11 +4,12 @@ from Classes_auxiliares.classes_auxiliares_banco import *
 
 class Banco: 
 
-    def __init__(self, nome): 
+    def __init__(self, nome, bancos): 
         self.nome = nome 
         self._clientes = [] 
         self._numero = 0 
         self._cliente_logado = None
+        self.bancos = bancos
 
     #Função responsável por verificar na lista de cliente do banco se existe o cliente passado 
     def busca_cliente(self, identificador):
@@ -65,6 +66,15 @@ class Banco:
             return cliente
         else: 
             return False
+
+    #Função para buscar URL do banco a patir do nome
+    def buscar_url(self, nome_banco): 
+        bancos = self.bancos
+        if nome_banco in bancos:
+            return bancos[nome_banco]
+        else:
+            return None
+
 
     @property
     def clientes(self):

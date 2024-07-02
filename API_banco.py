@@ -33,8 +33,19 @@ NOME_BANCO3 = os.getenv('NOME_BANCO3', 'Banco 3')
 PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '5000')
 URL_BANCO3 = f"http://{IP_BANCO3}:{PORTA_BANCO3}"
 
+BANCOS = {
+    NOME_BANCO1: {
+        'url': URL_BANCO1
+    },
+    NOME_BANCO2: {
+        'url': URL_BANCO2
+    },
+    NOME_BANCO3: {
+        'url': URL_BANCO3
+    }
+}
 
-banco = Banco(eval(f"NOME_BANCO{NUMERO_BANCO}"))
+banco = Banco(eval(f"NOME_BANCO{NUMERO_BANCO}"), BANCOS)
 
 @app.route('/cadastro_pessoa_fisica', methods=['POST'])
 def cadastrar_conta_pessoa_fisica():
@@ -45,6 +56,9 @@ def cadastrar_conta_pessoa_fisica():
 
     if not nome or not cpf or not senha:
         return jsonify({'message': 'Nome, CPF e senha são obrigatórios'}), 400
+
+    if banco.busca_cliente(cpf): 
+        return jsonify({'message': "Cliente já cadastrado"}), 400
 
     try: 
         pessoa_fisica = Pessoa_fisica(nome, cpf, senha)
@@ -67,6 +81,9 @@ def cadastrar_conta_pessoa_juridica():
 
     if not nome or not cnpj or not senha:
         return jsonify({'message': 'Nome, CNPJ e senha são obrigatórios'}), 400
+    
+    if banco.busca_cliente(cnpj): 
+        return jsonify({'message': "Cliente já cadastrado"}), 400
 
     try:
         pessoa_juridica = Pessoa_juridica(nome, cnpj, senha)
@@ -110,13 +127,6 @@ def cadastrar_conta_conjunta():
     except Exception as e:
         return jsonify({'message': f'Falha ao criar conta conjunta, Exceção: {e}'}), 500
 
-@app.route('/clientes', methods=['GET'])
-def get_clientes(): 
-    if banco.clientes: 
-        return jsonify({ 'message': f'Lista de clientes: {banco.clientes}'}), 201 
-    else: 
-        return jsonify({ 'message': 'Não existem clientes cadastrados'}), 201
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -132,6 +142,33 @@ def login():
     else:
         return jsonify({'message': 'Identificador ou senha incorretos'}), 401
 
+@app.route('/contas_cliente', methods=['GET'])
+def contas_cliente():
+    data = request.get_json()
+    identificador = data.get('identificador', '')
+    if not identificador:
+        return jsonify({'message': 'Identificador (CPF/CNPJ) é obrigatório'}), 400
+
+    cliente = banco.busca_cliente(identificador)
+    if not cliente:
+        return jsonify({'message': 'Cliente não encontrado'}), 404
+
+    contas_cliente = banco.busca_contas(identificador)
+    if not contas_cliente:
+        return jsonify({'message': 'Cliente não possui contas cadastradas'}), 404
+
+    contas_info = []
+    for conta in contas_cliente:
+        contas_info.append({
+            'numero_conta': conta.numero,
+            'saldo': conta.saldo,
+            'clientes': [cliente.nome for cliente in conta.clientes],
+            'historico_transacoes': conta.historico.transacoes,
+            'nome_banco': conta.nome_banco
+        })
+
+    return jsonify({'contas': contas_info}), 200 
+
 @app.route('/deposito', methods=['POST'])
 def deposito():
     data = request.get_json()
@@ -140,37 +177,27 @@ def deposito():
     valor = data.get('valor', 0)
 
     if nome_banco is None or not numero_conta or valor <= 0:
-        return jsonify({'message': 'Nome do banco, número da conta e valor válido são obrigatórios'}), 400
+        return jsonify({'message': 'Nome do banco, número da conta e valor válido são obrigatórios'}), 500
 
     numero_conta = int(numero_conta)
 
     if nome_banco == banco.nome:
-    
         conta = banco.busca_conta(numero_conta)
         if not conta:
-            return jsonify({'message': 'Conta não encontrada'}), 404
+            return jsonify({'message': 'Conta não encontrada'}), 500
+        try:
+            codigo_execucao = conta.iniciar_transacao()
+            sucesso, mensagem = conta.depositar(valor, codigo_execucao)
+            if sucesso:
+                conta.finalizar_transacao(codigo_execucao)
+                return jsonify({'message': mensagem}), 200
+            else:
+                conta.finalizar_transacao(codigo_execucao)
+                return jsonify({'message': mensagem}), 500
+        except Exception as e:
+            print(f'Erro durante a transação: {str(e)}')
+            return jsonify({'message': "Conta em outra transação no momento, aguarde e tente novamente"}), 500
 
-        tentativas = 5
-        for tentativa in range(tentativas):
-            if tentativa > 0:
-                # Espera um tempo aleatório entre 1 e 3 segundos antes de tentar novamente
-                tempo_espera = random.randint(1, 3)
-                time.sleep(tempo_espera)
-
-            try:
-                codigo_execucao = conta.iniciar_transacao()
-                sucesso, mensagem = conta.depositar(valor, codigo_execucao)
-                if sucesso:
-                    conta.finalizar_transacao()
-                    return jsonify({'message': mensagem}), 200
-                else:
-                    return jsonify({'message': mensagem}), 500
-            except Exception as e:
-                if tentativa == tentativas - 1:
-                    print(f'Erro durante a transação após {tentativas} tentativas: {str(e)}')
-
-        conta.finalizar_transacao()
-        return jsonify({'message': 'Todas as tentativas de depósito falharam'}), 500
     else: 
         if nome_banco == NOME_BANCO1: 
             try:
@@ -180,7 +207,7 @@ def deposito():
                 ) 
                 if response.status_code == 200:
                     return jsonify({'message': response.json().get('message')}), 200
-                elif response.status_code == 500 or response.status_code == 404: 
+                elif response.status_code == 500: 
                     return jsonify({'message': response.json().get('message')}), 500
             except Exception as e: 
                 print(f"Exceção: {e}")
@@ -210,50 +237,7 @@ def deposito():
                 print(f"Exceção: {e}") 
         else: 
             return jsonify({'message': 'Banco inexistente'}), 500
-
-@app.route('/saque', methods=['POST'])
-def saque():
-    data = request.get_json()
-    identificador = data.get('identificador', '')
-    numero_conta = data.get('numero_conta', '')
-    valor = data.get('valor', 0)
-
-    if not identificador or not numero_conta or valor <= 0:
-        return jsonify({'message': 'Identificador, número da conta e valor válido são obrigatórios'}), 400
-
-    numero_conta = int(numero_conta)
-
-    cliente = banco.busca_cliente(identificador)
-    if not cliente:
-        return jsonify({'message': 'Cliente não encontrado'}), 404
-
-    conta = banco.busca_conta(numero_conta)
-    if not conta or cliente not in conta.clientes:
-        return jsonify({'message': 'Conta não encontrada ou cliente não autorizado'}), 404
-
-    tentativas = 5
-    for tentativa in range(tentativas):
-        if tentativa > 0:
-            # Espera um tempo aleatório entre 1 e 3 segundos antes de tentar novamente
-            tempo_espera = random.randint(1, 3)
-            time.sleep(tempo_espera)
-
-        try:
-            codigo_execucao = conta.iniciar_transacao()
-            sucesso, mensagem = conta.retirar(valor, codigo_execucao)
-            if sucesso:
-                conta.finalizar_transacao()
-                return jsonify({'message': mensagem}), 200
-            else:
-                return jsonify({'message': mensagem}), 500
-        except Exception as e:
-            if tentativa == tentativas - 1:
-                print(f'Erro durante a transação após {tentativas} tentativas: {str(e)}')
-    conta.finalizar_transacao()
-    return jsonify({'message': 'Todas as tentativas de saque falharam'}), 500 
-
-@app.route('/contas_cliente', methods=['GET'])
-def contas_cliente():
+ 
     data = request.get_json()
     identificador = data.get('identificador', '')
 
@@ -283,11 +267,10 @@ def contas_cliente():
 @app.route('/iniciar_transacao', methods=['POST'])
 def iniciar_transacao():
     data = request.get_json()
-    identificador = data.get('identificador', '')
     numero_conta = data.get('numero_conta', '')
 
-    if not identificador or not numero_conta:
-        return jsonify({'message': 'Identificador e número da conta são obrigatórios'}), 400
+    if not numero_conta:
+        return jsonify({'message': 'Número da conta é obrigatório'}), 400
 
     conta = banco.busca_conta(numero_conta)
     if not conta:
@@ -302,11 +285,10 @@ def iniciar_transacao():
 @app.route('/finalizar_transacao', methods=['POST'])
 def finalizar_transacao():
     data = request.get_json()
-    identificador = data.get('identificador', '')
     numero_conta = data.get('numero_conta', '')
 
-    if not identificador or not numero_conta:
-        return jsonify({'message': 'Identificador e número da conta são obrigatórios'}), 400
+    if not numero_conta:
+        return jsonify({'message': 'Número da conta é obrigatório'}), 400
 
     conta = banco.busca_conta(numero_conta)
     if not conta:
@@ -363,7 +345,6 @@ def retirada_transferencia():
 @app.route('/transferencia', methods=['POST'])
 def transferencia():
     data = request.get_json()
-    identificador_origem = data.get('identificador_origem', '')
     numero_conta_origem = data.get('numero_conta_origem', '')
     numero_conta_destino = data.get('numero_conta_destino', '')
     valor = data.get('valor', 0)
@@ -457,7 +438,7 @@ def transferencia():
         try:
             response_origem = requests.post(
                 url_banco_origem + '/iniciar_transacao',
-                json={'identificador': identificador_origem, 'numero_conta': numero_conta_origem}
+                json={'numero_conta': numero_conta_origem}
             )
             if response_origem.status_code != 200:
                 return jsonify({'message': 'Falha ao iniciar transação no banco de origem', 'detalhes': response_origem.json()}), 500
@@ -482,7 +463,7 @@ def transferencia():
 
             response_finalizar_origem = requests.post(
                 url_banco_origem + '/finalizar_transacao',
-                json={'identificador': identificador_origem, 'numero_conta': numero_conta_origem}
+                json={'numero_conta': numero_conta_origem}
             )
             if response_finalizar_origem.status_code != 200:
                 conta_destino.retirar(valor, codigo_execucao_destino)
@@ -499,7 +480,7 @@ def transferencia():
         try:
             response_origem = requests.post(
                 url_banco_origem + '/iniciar_transacao',
-                json={'identificador': identificador_origem, 'numero_conta': numero_conta_origem}
+                json={'numero_conta': numero_conta_origem}
             )
             if response_origem.status_code != 200:
                 return jsonify({'message': 'Falha ao iniciar transação no banco de origem', 'detalhes': response_origem.json()}), 500
@@ -539,7 +520,7 @@ def transferencia():
 
             response_finalizar_origem = requests.post(
                 url_banco_origem + '/finalizar_transacao',
-                json={'identificador': identificador_origem, 'numero_conta': numero_conta_origem}
+                json={'numero_conta': numero_conta_origem}
             )
             if response_finalizar_origem.status_code != 200:
                 requests.post(
@@ -560,6 +541,8 @@ def transferencia():
             return jsonify({'message': f'Erro ao realizar transferência: {e}'}), 500
 
     return jsonify({'message': 'Tipo de transferência não suportada'}), 400
+
+
 
 if __name__ == '__main__':
     app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

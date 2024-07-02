@@ -1,5 +1,6 @@
 import secrets 
 from datetime import datetime
+import threading 
 
 class Historico:
     def __init__(self, transacoes=None):
@@ -59,8 +60,11 @@ class ContaBase:
         self._codigo_execucao = secrets.token_hex(8)
         return self._codigo_execucao
 
-    def finalizar_transacao(self):
-        self._codigo_execucao = None
+    def finalizar_transacao(self, codigo_execucao):
+        if codigo_execucao == self._codigo_execucao:
+            self._codigo_execucao = None
+        else: 
+            raise Exception('Código de execução inválido para finalizar essa transação')
 
     def depositar(self, valor, codigo_execucao):
         if self._codigo_execucao != codigo_execucao:

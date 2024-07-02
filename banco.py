@@ -73,8 +73,7 @@ class Banco:
         if nome_banco in bancos:
             return bancos[nome_banco]
         else:
-            return None
-
+            return None  
 
     @property
     def clientes(self):

@@ -191,9 +191,10 @@ def deposito():
                 conta.lock.release()
                 return jsonify({'message': mensagem}), 200
             else:
-                conta.conta.lock.release()
+                conta.lock.release()
                 return jsonify({'message': mensagem}), 500
         except Exception as e:
+            conta.lock.release()
             print(f'Erro durante a transação: {str(e)}')
             return jsonify({'message': "Conta em outra transação no momento, aguarde e tente novamente"}), 500
 
@@ -232,7 +233,34 @@ def deposito():
                 print(f"Exceção: {e}") 
         else: 
             return jsonify({'message': 'Banco inexistente'}), 500
- 
+
+@app.route('/saque', methods=['POST']) 
+def saque(): 
+    data = request.get_json()
+    numero_conta = data.get('numero_conta', '')
+    valor = data.get('valor', 0)
+
+    if (numero_conta is None) or valor <= 0:
+        return jsonify({'message': 'Número da conta e valor válido são obrigatórios'}), 500
+    
+    numero_conta = int(numero_conta) 
+
+    conta = banco.busca_conta(numero_conta)
+    if not conta:
+        return jsonify({'message': 'Conta não encontrada'}), 500
+    try:
+        conta.lock.acquire(blocking=True)
+        sucesso, mensagem = conta.retirar(valor, banco.cliente_logado)
+        if sucesso:
+            conta.lock.release()
+            return jsonify({'message': mensagem}), 200
+        else:
+            conta.lock.release()
+            return jsonify({'message': mensagem}), 500
+    except Exception as e:
+        conta.lock.release()
+        print(f'Erro durante a transação: {str(e)}')
+        return jsonify({'message': "Conta em outra transação no momento, aguarde e tente novamente"}), 500
 
 @app.route('/iniciar_transacao', methods=['POST'])
 def iniciar_transacao():
@@ -306,7 +334,7 @@ def retirada_transferencia():
     if not conta:
         return jsonify({'message': 'Conta não encontrada'}), 404
 
-    sucesso, mensagem = conta.retirar(valor, codigo_execucao)
+    sucesso, mensagem = conta.retirar(valor, codigo_execucao, banco.cliente_logado)
     if sucesso:
         return jsonify({'message': mensagem}), 200
     else:

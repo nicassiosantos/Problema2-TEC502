@@ -23,7 +23,9 @@ class ContaBase:
     def __init__(self, numero, nome_banco, clientes=None):
         self._nome_banco = nome_banco
         self._saldo = 0
+        self._saldo_anterior = 0
         self._numero = numero
+        self.modificado = False
         self._clientes = clientes if clientes else []
         self._historico = Historico()
         self.lock = threading.Lock()
@@ -48,9 +50,12 @@ class ContaBase:
     def nome_banco(self):
         return self._nome_banco
 
+    #Função que deposita um valor em uma conta
     def depositar(self, valor):
+
         if valor <= 0:
             return False, 'Valor do depósito deve ser maior que zero'  # Retorna uma tupla com False e mensagem de erro
+        self._saldo_anterior = self._saldo
         self._saldo += valor
         self._historico.adicionar_transacao({
             "tipo": "Deposito",
@@ -60,20 +65,33 @@ class ContaBase:
         })
         return True, f'Depósito de {valor} na conta {self._numero} realizado com sucesso'
     
-    def retirar(self, valor, codigo_execucao):
-        if self._codigo_execucao != codigo_execucao:
-            return False, 'Código de execução inválido'  # Retorna uma tupla com False e mensagem de erro
+    #Função que retira um valor em uma conta
+    def retirar(self, valor, cliente_logado):
         if valor <= 0:
             return False, 'Valor do saque deve ser maior que zero'  # Retorna uma tupla com False e mensagem de erro
         if self._saldo < valor:
             return False, 'Saldo insuficiente para realizar o saque'  # Retorna uma tupla com False e mensagem de erro
 
+        if cliente_logado == None: 
+            return False, 'Realize o login para fazer o saque'
+
+        if self.clientes[0].identificador != cliente_logado.identificador: 
+            return False, 'Cliente sem  autorização para realizar o saque' # Retorna uma tupla com False e mensagem de erro
+
+        self._saldo_anterior = self._saldo
         self._saldo -= valor
         self._historico.adicionar_transacao({
             "tipo": "Saque",
-            "valor": valor
+            "valor": valor, 
+            "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
         })
         return True, f'Saque de {valor} realizado com sucesso'
+
+    #Função que prepara uma conta para uma transferência
+    def preparar_transferencia(self, valor):
+        if self._saldo >= valor: 
+            return True 
+        return False
 
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):

@@ -26,7 +26,7 @@ class ContaBase:
         self._numero = numero
         self._clientes = clientes if clientes else []
         self._historico = Historico()
-        self._codigo_execucao = None
+        self.lock = threading.Lock()
 
     @property
     def saldo(self):
@@ -48,30 +48,9 @@ class ContaBase:
     def nome_banco(self):
         return self._nome_banco
 
-    @property
-    def codigo_execucao(self):
-        return self._codigo_execucao
-
-    def iniciar_transacao(self):
-        if self._codigo_execucao is not None:
-            raise Exception('Conta já está em uma transação')
-
-        # Gerar um código aleatório seguro de 16 caracteres
-        self._codigo_execucao = secrets.token_hex(8)
-        return self._codigo_execucao
-
-    def finalizar_transacao(self, codigo_execucao):
-        if codigo_execucao == self._codigo_execucao:
-            self._codigo_execucao = None
-        else: 
-            raise Exception('Código de execução inválido para finalizar essa transação')
-
-    def depositar(self, valor, codigo_execucao):
-        if self._codigo_execucao != codigo_execucao:
-            return False, 'Código de execução inválido'  # Retorna uma tupla com False e mensagem de erro
+    def depositar(self, valor):
         if valor <= 0:
             return False, 'Valor do depósito deve ser maior que zero'  # Retorna uma tupla com False e mensagem de erro
-        
         self._saldo += valor
         self._historico.adicionar_transacao({
             "tipo": "Deposito",

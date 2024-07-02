@@ -6,13 +6,13 @@ import random
 import time
 import requests
 import os
-
+import json
 
 
 app = Flask(__name__)
 
 
-NUMERO_BANCO = os.getenv('NUMERO_BANCO', '1')
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '2')
 
 ip_banco1 = os.getenv('IP_BANCO3', '1')
 IP_BANCO1 = f"127.0.0.{ip_banco1}"
@@ -20,14 +20,14 @@ NOME_BANCO1 = os.getenv('NOME_BANCO1', 'Banco 1')
 PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '5000')
 URL_BANCO1 = f"http://{IP_BANCO1}:{PORTA_BANCO1}"
 
-ip_banco2 = os.getenv('IP_BANCO2', '1')
+ip_banco2 = os.getenv('IP_BANCO2', '2')
 IP_BANCO2 = f"127.0.0.{ip_banco2}"
 NOME_BANCO2 = os.getenv('NOME_BANCO2', 'Banco 2') 
 PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '5000')
 URL_BANCO2 = f"http://{IP_BANCO2}:{PORTA_BANCO2}"
 
 
-ip_banco3 = os.getenv('IP_BANCO3', '1')
+ip_banco3 = os.getenv('IP_BANCO3', '3')
 IP_BANCO3 = f"127.0.0.{ip_banco3}"
 NOME_BANCO3 = os.getenv('NOME_BANCO3', 'Banco 3') 
 PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '5000')
@@ -176,23 +176,22 @@ def deposito():
     nome_banco = data.get('nome_banco', '')
     valor = data.get('valor', 0)
 
-    if nome_banco is None or not numero_conta or valor <= 0:
+    if nome_banco is None or (numero_conta is None) or valor <= 0:
         return jsonify({'message': 'Nome do banco, número da conta e valor válido são obrigatórios'}), 500
 
     numero_conta = int(numero_conta)
-
     if nome_banco == banco.nome:
         conta = banco.busca_conta(numero_conta)
         if not conta:
             return jsonify({'message': 'Conta não encontrada'}), 500
         try:
-            codigo_execucao = conta.iniciar_transacao()
-            sucesso, mensagem = conta.depositar(valor, codigo_execucao)
+            conta.lock.acquire(blocking=True)
+            sucesso, mensagem = conta.depositar(valor)
             if sucesso:
-                conta.finalizar_transacao(codigo_execucao)
+                conta.lock.release()
                 return jsonify({'message': mensagem}), 200
             else:
-                conta.finalizar_transacao(codigo_execucao)
+                conta.conta.lock.release()
                 return jsonify({'message': mensagem}), 500
         except Exception as e:
             print(f'Erro durante a transação: {str(e)}')
@@ -201,10 +200,8 @@ def deposito():
     else: 
         if nome_banco == NOME_BANCO1: 
             try:
-                response = requests.post(
-                    URL_BANCO1 + '/deposito',
-                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
-                ) 
+                dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
+                response = requests.post(f'{URL_BANCO1}/deposito', json=dados)
                 if response.status_code == 200:
                     return jsonify({'message': response.json().get('message')}), 200
                 elif response.status_code == 500: 
@@ -213,10 +210,9 @@ def deposito():
                 print(f"Exceção: {e}")
         elif nome_banco == NOME_BANCO2: 
             try:
+                dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
                 response = requests.post(
-                    URL_BANCO2 + '/deposito',
-                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
-                ) 
+                    URL_BANCO2 + '/deposito', json=dados) 
                 if response.status_code == 200:
                     return jsonify({'message': response.json().get('message')}), 200
                 elif response.status_code == 500: 
@@ -225,10 +221,9 @@ def deposito():
                 print(f"Exceção: {e}")
         elif nome_banco == NOME_BANCO3: 
             try:
+                dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
                 response = requests.post(
-                    URL_BANCO3 + '/deposito',
-                    json={'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
-                ) 
+                    URL_BANCO3 + '/deposito', json=dados) 
                 if response.status_code == 200:
                     return jsonify({'message': response.json().get('message')}), 200
                 elif response.status_code == 500: 
@@ -238,31 +233,6 @@ def deposito():
         else: 
             return jsonify({'message': 'Banco inexistente'}), 500
  
-    data = request.get_json()
-    identificador = data.get('identificador', '')
-
-    if not identificador:
-        return jsonify({'message': 'Identificador (CPF/CNPJ) é obrigatório'}), 400
-
-    cliente = banco.busca_cliente(identificador)
-    if not cliente:
-        return jsonify({'message': 'Cliente não encontrado'}), 404
-
-    contas_cliente = banco.busca_contas(identificador)
-    if not contas_cliente:
-        return jsonify({'message': 'Cliente não possui contas cadastradas'}), 404
-
-    contas_info = []
-    for conta in contas_cliente:
-        contas_info.append({
-            'numero_conta': conta.numero,
-            'saldo': conta.saldo,
-            'clientes': [cliente.nome for cliente in conta.clientes],
-            'historico_transacoes': conta.historico.transacoes,
-            'nome_banco': conta.nome_banco
-        })
-
-    return jsonify({'contas': contas_info}), 200 
 
 @app.route('/iniciar_transacao', methods=['POST'])
 def iniciar_transacao():

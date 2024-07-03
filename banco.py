@@ -98,39 +98,65 @@ class Banco:
         except Exception as e: 
             print(f"Exceção: {e}")
     
-    #Função que recebe uma conta e a prepara para realizar uma transferência
-    def preparacao_contas(self, banco, transferencias, preparados, preparacao):
-        
+    #Função que recebe contas e as prepara para realizar uma transferência
+    def preparacao_contas(self, transferencias, preparados, preparacao):
         for transferencia in transferencias:
             numero_conta_origem = transferencia['numero_conta_origem']
             nome_banco_origem = transferencia['nome_banco_origem']
             valor = transferencia['valor']
 
             # Encontrar a conta de origem
-            if nome_banco_origem == banco.nome:
-                conta_origem = banco.busca_conta(numero_conta_origem)
+            if nome_banco_origem == self.nome:
+                conta_origem = self.busca_conta(numero_conta_origem)
                 if not conta_origem:
                     preparados = False
                     break
     
                 # Preparar a transferência na conta de origem
                 conta_origem.lock.acquire(blocking=True)
-                preparados = conta_origem.preparar_transferencia(valor)
+                preparados = conta_origem.preparar_transferencia(valor, "saque")
                 conta_origem.lock.release()
                 preparacao.append((nome_banco_origem, conta_origem, valor))
             else: 
-                for nome_banco, info in banco.bancos.items(): 
+                for nome_banco, info in self.bancos.items(): 
+                    conta_origem.lock.acquire(blocking=True)
                     if nome_banco == nome_banco_origem: 
                         response = self.busca_conta_externa(info['url'],nome_banco_origem,numero_conta_origem)
-                        
                         if response.status_code == 200: 
-                            pass
+                            response = self.preparar_conta_externa(info['url'],numero_conta_origem,nome_banco_origem,valor,"saque")  
+                            if response.status_code == 200: 
+                                conta_origem.lock.release()
+                                mensagem = response.json().get('message')
+                                preparacao.append((nome_banco_origem, conta_origem, valor))
+                            else: 
+                                conta_origem.lock.release()
+                                mensagem = response.json().get('message')
+                                preparados = False 
+                                break
                         else: 
                             preparados = False 
                             break
                 if preparados == False: 
-                    break
-                       
+                    break 
+
+        return preparados, preparacao, mensagem
+    
+    #Função que prepara uma conta de um banco externo 
+    def preparar_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
+            response = requests.post(f'{url}/preparar_transferencia', json=dados)
+            if response.status_code == 200:
+                return jsonify({'message': response.json().get('message')}), 200
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
+
+    #Função para realizar a confirmação de contas de para realizar transferencia  
+    def confirmacao_contas(self, ):
+        pass
+
     @property
     def clientes(self):
         return self._clientes

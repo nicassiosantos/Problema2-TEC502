@@ -103,12 +103,16 @@ class ContaBase:
             if self._saldo >= valor: 
                 self._saldo_anterior = self._saldo 
                 self._saldo -= valor
-                return True 
+                self.modificado = True
+                return True, "Preparação feita com sucesso"
+            else: 
+                return False, "Preparação falhou, saldo insuficiente"
         elif tipo == 'deposito': 
+            self.modificado = True
             self._saldo_anterior = self._saldo 
             self._saldo += valor
-            return True
-        return False
+            return True, "Preparação feita com sucesso"
+        return False, "Preparação falhou"
 
     #Função para confirmar a transferência
     def confirmar_transferencia(self,valor, nome_banco, numero_conta, tipo):

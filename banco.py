@@ -90,11 +90,9 @@ class Banco:
     #Função para pegar uma conta de um banco externo
     def busca_conta_externa(self, url, nome_banco, numero_conta): 
         try:
-            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco}
-            response = requests.get(f'{url}/get_conta', json=dados)
+            response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}')
             if response.status_code == 200:
-                pass
-                return 
+                return jsonify(response.json()), 200
             elif response.status_code == 500: 
                 return jsonify({'message': response.json().get('message')}), 500
         except Exception as e: 

@@ -267,6 +267,10 @@ def saque():
         print(f'Erro durante a transação: {str(e)}')
         return jsonify({'message': "Conta em outra transação no momento, aguarde e tente novamente"}), 500
 
+@app.post('/preparar_transferencia', methods=['POST'])
+def preparar_transferencia(): 
+    pass
+
 @app.route('/transferir', methods=['POST'])
 def transferir():
     data = request.json
@@ -278,20 +282,7 @@ def transferir():
     preparados = True
     preparacao = []
 
-    for transferencia in transferencias:
-        numero_conta_origem = transferencia['numero_conta_origem']
-        nome_banco_origem = transferencia['nome_banco_origem']
-        valor = transferencia['valor']
-
-        # Encontrar a conta de origem
-        conta_origem = banco.busca_conta(numero_conta_origem)
-        if not conta_origem:
-            preparados = False
-            break
-
-        # Preparar a transferência na conta de origem
-        preparados &= conta_origem.preparar_transferencia(valor)
-        preparacao.append((conta_origem, valor))
+    banco.preparacao_contas(banco, transferencias, preparados, preparacao)
 
     if not preparados:
         return jsonify({"success": False, "message": "Falha na preparação da transferência"}), 400

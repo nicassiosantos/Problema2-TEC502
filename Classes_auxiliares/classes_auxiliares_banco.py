@@ -98,32 +98,51 @@ class ContaBase:
         return True, f'Saque de {valor} realizado com sucesso'
 
     #Função que prepara uma conta para uma transferência
-    def preparar_transferencia(self, valor):
-        if self._saldo >= valor: 
+    def preparar_transferencia(self, valor, tipo):
+        if tipo == 'saque':
+            if self._saldo >= valor: 
+                self._saldo_anterior = self._saldo 
+                self._saldo -= valor
+                return True 
+        elif tipo == 'deposito': 
             self._saldo_anterior = self._saldo 
-            self._saldo -= valor
-            return True 
+            self._saldo += valor
+            return True
         return False
 
     #Função para confirmar a transferência
-    def confirmar_transferencia(self,valor, nome_banco, numero_conta):
+    def confirmar_transferencia(self,valor, nome_banco, numero_conta, tipo):
         codigo_transacao = self._historico.codigo_transacoes
         self.codigo_ultima_transacao = codigo_transacao
-        self._historico.adicionar_transacao({
-            "codigo": codigo_transacao,
-            "tipo": f"Transferencia para {nome_banco} para conta de número: {numero_conta}",
-            "valor": valor,
-            "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        })
-        return True
+        if tipo == 'saque':
+            self._historico.adicionar_transacao({
+                "codigo": codigo_transacao,
+                "tipo": f"Transferencia para {nome_banco} para conta de número: {numero_conta}",
+                "valor": valor,
+                "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            })
+            return True 
+        elif tipo == 'deposito': 
+            self._historico.adicionar_transacao({
+                "codigo": codigo_transacao,
+                "tipo": f"Transferencia recebida",
+                "valor": valor,
+                "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            })
     
     #Função para desfazer operações(Rollback)
-    def desfazer_transferencia(self):
+    def desfazer_transferencia(self, tipo):
         if self.modificado:
-            valor = self._saldo_anterior - self._saldo
-            self._saldo += valor
-            codigo_transacao = self.codigo_ultima_transacao
-            self._historico.remover_transacao(codigo_transacao)
+            if tipo == 'saque':
+                valor = self._saldo_anterior - self._saldo
+                self._saldo += valor
+                codigo_transacao = self.codigo_ultima_transacao
+                self._historico.remover_transacao(codigo_transacao)
+            elif tipo == 'deposito':
+                valor = self._saldo -  self._saldo_anterior
+                self._saldo -= valor
+                codigo_transacao = self.codigo_ultima_transacao
+                self._historico.remover_transacao(codigo_transacao)
 
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):

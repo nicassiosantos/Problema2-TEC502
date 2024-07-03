@@ -76,7 +76,7 @@ class Banco:
             return None  
 
     #Função para fazer a requisição de deposito par um banco externo
-    def deposito_outro_banco(self, url,numero_conta, nome_banco, valor): 
+    def deposito_outro_banco(self, url, numero_conta, nome_banco, valor): 
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
             response = requests.post(f'{url}/deposito', json=dados)
@@ -97,7 +97,40 @@ class Banco:
                 return jsonify({'message': response.json().get('message')}), 500
         except Exception as e: 
             print(f"Exceção: {e}")
+    
+    #Função que recebe uma conta e a prepara para realizar uma transferência
+    def preparacao_contas(self, banco, transferencias, preparados, preparacao):
         
+        for transferencia in transferencias:
+            numero_conta_origem = transferencia['numero_conta_origem']
+            nome_banco_origem = transferencia['nome_banco_origem']
+            valor = transferencia['valor']
+
+            # Encontrar a conta de origem
+            if nome_banco_origem == banco.nome:
+                conta_origem = banco.busca_conta(numero_conta_origem)
+                if not conta_origem:
+                    preparados = False
+                    break
+    
+                # Preparar a transferência na conta de origem
+                conta_origem.lock.acquire(blocking=True)
+                preparados = conta_origem.preparar_transferencia(valor)
+                conta_origem.lock.release()
+                preparacao.append((nome_banco_origem, conta_origem, valor))
+            else: 
+                for nome_banco, info in banco.bancos.items(): 
+                    if nome_banco == nome_banco_origem: 
+                        response = self.busca_conta_externa(info['url'],nome_banco_origem,numero_conta_origem)
+                        
+                        if response.status_code == 200: 
+                            pass
+                        else: 
+                            preparados = False 
+                            break
+                if preparados == False: 
+                    break
+                       
     @property
     def clientes(self):
         return self._clientes

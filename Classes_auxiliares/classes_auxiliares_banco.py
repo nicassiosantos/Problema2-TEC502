@@ -31,7 +31,6 @@ class ContaBase:
         self._saldo = 0
         self._saldo_anterior = 0
         self._numero = numero
-        self.modificado = False
         self._clientes = clientes if clientes else []
         self.codigo_ultima_transacao = None
         self._historico = Historico()
@@ -83,9 +82,14 @@ class ContaBase:
         if cliente_logado == None: 
             return False, 'Realize o login para fazer o saque'
 
-        if self.clientes[0].identificador != cliente_logado.identificador: 
-            return False, 'Cliente sem  autorização para realizar o saque' # Retorna uma tupla com False e mensagem de erro
-
+        tamanho_clientes = self.clientes 
+        if tamanho_clientes == 1:
+            if self.clientes[0].identificador  != cliente_logado.identificador: 
+                return False, 'Cliente sem  autorização para realizar o saque' # Retorna uma tupla com False e mensagem de erro
+        elif tamanho_clientes == 2: 
+            if (self.clientes[0].identificador != cliente_logado.identificador) or (self.clientes[1].identificador != cliente_logado.identificador): 
+                return False, 'Cliente sem  autorização para realizar o saque' # Retorna uma tupla com False e mensagem de erro
+        
         self._saldo_anterior = self._saldo
         self._saldo -= valor
         codigo_transacao = self._historico.codigo_transacoes
@@ -103,12 +107,10 @@ class ContaBase:
             if self._saldo >= valor: 
                 self._saldo_anterior = self._saldo 
                 self._saldo -= valor
-                self.modificado = True
                 return True, "Preparação feita com sucesso"
             else: 
                 return False, "Preparação falhou, saldo insuficiente"
         elif tipo == 'deposito': 
-            self.modificado = True
             return True, "Preparação feita com sucesso"
         return False, "Preparação falhou"
 
@@ -139,29 +141,28 @@ class ContaBase:
     
     #Função para desfazer operações(Rollback)
     def desfazer_transferencia(self, tipo):
-        if self.modificado:
-            if tipo == 'saque':
-                valor = self._saldo_anterior - self._saldo
-                self._saldo += valor
+        if tipo == 'saque':
+            valor = self._saldo_anterior - self._saldo
+            self._saldo += valor
+            if self.codigo_ultima_transacao != None:
+                try:
+                    codigo_transacao = self.codigo_ultima_transacao
+                    self._historico.remover_transacao(codigo_transacao)
+                except Exception as e: 
+                    print(f'Exceção: {e}') 
+            mensagem = "Sucesso em desfazer operação"
+            return (True, mensagem)
+        elif tipo == 'deposito':
+            valor = self._saldo -  self._saldo_anterior
+            self._saldo -= valor
+            if self.codigo_ultima_transacao != None:
                 codigo_transacao = self.codigo_ultima_transacao
                 self._historico.remover_transacao(codigo_transacao)
-                self.modificado = False 
-                return True , 'Sucesso em desfazer operação'
-            elif tipo == 'deposito':
-                valor = self._saldo -  self._saldo_anterior
-                self._saldo -= valor
-                codigo_transacao = self.codigo_ultima_transacao
-                self._historico.remover_transacao(codigo_transacao)
-                self.modificado = False
-                return True , 'Sucesso em desfazer operação' 
-            else: 
-                return False, 'Tipo especificado, incorreto'
-        return True, 'Sucesso em desfazer operação'
+            mensagem = "Sucesso em desfazer operação"
+            return (True, mensagem) 
+        mensagem = "Tipo especificado, incorreto"
+        return (False, mensagem)
 
-    #Função responsavel por desfazer o estado de modificado de uma conta
-    def desfazer_estado_modificado(self): 
-        self.modificado = False
-        return True, "modificação feita com sucesso"
 
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):

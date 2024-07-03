@@ -92,9 +92,9 @@ class Banco:
         try:
             response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}')
             if response.status_code == 200:
-                return jsonify(response.json()), 200
+                return response
             elif response.status_code == 500: 
-                return jsonify({'message': response.json().get('message')}), 500
+                return response
         except Exception as e: 
             print(f"Exceção: {e}")
     
@@ -116,20 +116,17 @@ class Banco:
                 conta_origem.lock.acquire(blocking=True)
                 preparados = conta_origem.preparar_transferencia(valor, "saque")
                 conta_origem.lock.release()
-                preparacao.append((nome_banco_origem, conta_origem, valor))
+                preparacao.append((nome_banco_origem, conta_origem, valor, "saque"))
             else: 
                 for nome_banco, info in self.bancos.items(): 
-                    conta_origem.lock.acquire(blocking=True)
                     if nome_banco == nome_banco_origem: 
                         response = self.busca_conta_externa(info['url'],nome_banco_origem,numero_conta_origem)
                         if response.status_code == 200: 
                             response = self.preparar_conta_externa(info['url'],numero_conta_origem,nome_banco_origem,valor,"saque")  
                             if response.status_code == 200: 
-                                conta_origem.lock.release()
                                 mensagem = response.json().get('message')
                                 preparacao.append((nome_banco_origem, conta_origem, valor))
                             else: 
-                                conta_origem.lock.release()
                                 mensagem = response.json().get('message')
                                 preparados = False 
                                 break
@@ -154,8 +151,116 @@ class Banco:
             print(f"Exceção: {e}")
 
     #Função para realizar a confirmação de contas de para realizar transferencia  
-    def confirmacao_contas(self, ):
-        pass
+    def confirmacao_contas(self, preparacao, sucesso_confirmacao):
+        for nome_banco_conta,numero_conta,valor, tipo in preparacao:
+            if nome_banco_conta == self.nome:
+                conta_origem = self.busca_conta(numero_conta)
+                if not conta_origem:
+                    sucesso_confirmacao = False 
+                    break 
+                conta_origem.lock.acquire(blocking=True)
+                sucesso_confirmacao, mensagem = conta_origem.confirmar_transferencia(valor)
+                conta_origem.lock.release()
+            else: 
+                for nome_banco, info in self.bancos.items(): 
+                    if nome_banco == nome_banco_conta: 
+                        response = self.confirmacao_conta_externa(info['url'],numero_conta,nome_banco_conta,valor,tipo)  
+                        if response[1] == 200: 
+                            mensagem = response[0]['message']
+                        else: 
+                            mensagem = response[0]['message']
+                            sucesso_confirmacao = False 
+                            break
+                if sucesso_confirmacao == False: 
+                    break 
+
+        return sucesso_confirmacao, mensagem
+
+    #Função para confirmar em uma conta de um banco externo 
+    def confirmacao_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
+            response = requests.post(f'{url}/confirmar_transferencia', json=dados)
+            if response.status_code == 200:
+                return jsonify({'message': response.json().get('message')}), 200
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
+
+    #Função para desfazer alterações feitas nas contas (Rollback)
+    def desfazer_alterações(self, preparacao, sucesso): 
+        for nome_banco_conta,numero_conta, valor, tipo in preparacao:
+            if nome_banco_conta == self.nome:
+                conta_origem = self.busca_conta(numero_conta)
+                if not conta_origem:
+                    sucesso = False 
+                    break 
+                conta_origem.lock.acquire(blocking=True)
+                sucesso, mensagem = conta_origem.desfazer_transferencia(valor, tipo)
+                conta_origem.lock.release()
+            else: 
+                for nome_banco, info in self.bancos.items(): 
+                    if nome_banco == nome_banco_conta: 
+                        response = self.desfazer_conta_externa(info['url'],numero_conta,nome_banco_conta,valor,tipo)  
+                        if response[1] == 200: 
+                            mensagem = response[0]['message']
+                        else: 
+                            mensagem = response[0]['message']
+                            sucesso_confirmacao = False 
+                            break
+                if sucesso_confirmacao == False: 
+                    break 
+        return sucesso, mensagem
+
+    #Função responsavel por desfazer alterações em uma conta de um banco externo 
+    def desfazer_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
+            response = requests.post(f'{url}/desfazer_transferencia', json=dados)
+            if response.status_code == 200:
+                return jsonify({'message': response.json().get('message')}), 200
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
+
+    #Função responsável por desfazer estado de modificado de todas as contas da operação
+    def desfazer_estado_modificado(self, preparacao): 
+        for nome_banco_conta,numero_conta, valor, tipo in preparacao:
+            if nome_banco_conta == self.nome:
+                conta_origem = self.busca_conta(numero_conta)
+                if not conta_origem:
+                    sucesso = False 
+                    break 
+                conta_origem.lock.acquire(blocking=True)
+                conta_origem.desfazer_estado_modificado()
+                conta_origem.lock.release()
+            else: 
+                for nome_banco, info in self.bancos.items(): 
+                    if nome_banco == nome_banco_conta: 
+                        response = self.desfazer_estado_externo(info['url'],numero_conta,nome_banco_conta)  
+                        if response[1] == 200: 
+                            mensagem = response[0]['message']
+                        else:
+                            mensagem = response[0]['message']
+                            sucesso_confirmacao = False 
+                            break
+                if sucesso_confirmacao == False: 
+                    break 
+        return sucesso, mensagem
+
+    #Função responsavel por desfazer estado de modificado de uma conta da operação 
+    def desfazer_estado_externo(url, numero_conta, nome_banco): 
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco}
+            response = requests.post(f'{url}/alterar_modificado', json=dados)
+            if response.status_code == 200:
+                return jsonify({'message': response.json().get('message')}), 200
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
 
     @property
     def clientes(self):

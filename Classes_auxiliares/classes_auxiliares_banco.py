@@ -109,8 +109,6 @@ class ContaBase:
                 return False, "Preparação falhou, saldo insuficiente"
         elif tipo == 'deposito': 
             self.modificado = True
-            self._saldo_anterior = self._saldo 
-            self._saldo += valor
             return True, "Preparação feita com sucesso"
         return False, "Preparação falhou"
 
@@ -125,14 +123,19 @@ class ContaBase:
                 "valor": valor,
                 "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
             })
-            return True 
+            return True, "Confirmação feita com sucesso"
         elif tipo == 'deposito': 
+            self._saldo_anterior = self._saldo 
+            self._saldo += valor
             self._historico.adicionar_transacao({
                 "codigo": codigo_transacao,
                 "tipo": f"Transferencia recebida",
                 "valor": valor,
                 "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
             })
+            return True, "Confirmação feita com sucesso" 
+        else: 
+            return False, "Confirmaçõa não foi possivel de ser feita"
     
     #Função para desfazer operações(Rollback)
     def desfazer_transferencia(self, tipo):
@@ -142,11 +145,23 @@ class ContaBase:
                 self._saldo += valor
                 codigo_transacao = self.codigo_ultima_transacao
                 self._historico.remover_transacao(codigo_transacao)
+                self.modificado = False 
+                return True , 'Sucesso em desfazer operação'
             elif tipo == 'deposito':
                 valor = self._saldo -  self._saldo_anterior
                 self._saldo -= valor
                 codigo_transacao = self.codigo_ultima_transacao
                 self._historico.remover_transacao(codigo_transacao)
+                self.modificado = False
+                return True , 'Sucesso em desfazer operação' 
+            else: 
+                return False, 'Tipo especificado, incorreto'
+        return True, 'Sucesso em desfazer operação'
+
+    #Função responsavel por desfazer o estado de modificado de uma conta
+    def desfazer_estado_modificado(self): 
+        self.modificado = False
+        return True, "modificação feita com sucesso"
 
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):

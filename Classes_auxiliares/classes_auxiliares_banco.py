@@ -11,6 +11,12 @@ class Historico:
         self._transacoes.append(transacao)
         self._codigo_transacao += 1
 
+    def remover_transacao(self, codigo): 
+        for transacao in self._transacoes: 
+            if transacao["codigo"] == codigo: 
+                self._transacoes.remove(transacao)
+                return None
+                
     @property
     def transacoes(self):
         return self._transacoes
@@ -27,6 +33,7 @@ class ContaBase:
         self._numero = numero
         self.modificado = False
         self._clientes = clientes if clientes else []
+        self.codigo_ultima_transacao = None
         self._historico = Historico()
         self.lock = threading.Lock()
 
@@ -52,12 +59,13 @@ class ContaBase:
 
     #Função que deposita um valor em uma conta
     def depositar(self, valor):
-
         if valor <= 0:
             return False, 'Valor do depósito deve ser maior que zero'  # Retorna uma tupla com False e mensagem de erro
         self._saldo_anterior = self._saldo
         self._saldo += valor
+        codigo_transacao = self._historico.codigo_transacoes
         self._historico.adicionar_transacao({
+            "codigo": codigo_transacao,
             "tipo": "Deposito",
             "valor": valor, 
             "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
@@ -80,7 +88,9 @@ class ContaBase:
 
         self._saldo_anterior = self._saldo
         self._saldo -= valor
+        codigo_transacao = self._historico.codigo_transacoes
         self._historico.adicionar_transacao({
+            "codigo": codigo_transacao,
             "tipo": "Saque",
             "valor": valor, 
             "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -90,8 +100,30 @@ class ContaBase:
     #Função que prepara uma conta para uma transferência
     def preparar_transferencia(self, valor):
         if self._saldo >= valor: 
+            self._saldo_anterior = self._saldo 
+            self._saldo -= valor
             return True 
         return False
+
+    #Função para confirmar a transferência
+    def confirmar_transferencia(self,valor, nome_banco, numero_conta):
+        codigo_transacao = self._historico.codigo_transacoes
+        self.codigo_ultima_transacao = codigo_transacao
+        self._historico.adicionar_transacao({
+            "codigo": codigo_transacao,
+            "tipo": f"Transferencia para {nome_banco} para conta de número: {numero_conta}",
+            "valor": valor,
+            "data": datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        })
+        return True
+    
+    #Função para desfazer operações(Rollback)
+    def desfazer_transferencia(self):
+        if self.modificado:
+            valor = self._saldo_anterior - self._saldo
+            self._saldo += valor
+            codigo_transacao = self.codigo_ultima_transacao
+            self._historico.remover_transacao(codigo_transacao)
 
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):

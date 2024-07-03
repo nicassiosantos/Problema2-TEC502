@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, request, redirect, url_for, flash
 from Classes_auxiliares.classes_auxiliares_banco import * 
-
+import requests
 
 class Banco: 
 
@@ -75,6 +75,31 @@ class Banco:
         else:
             return None  
 
+    #Função para fazer a requisição de deposito par um banco externo
+    def deposito_outro_banco(self, url,numero_conta, nome_banco, valor): 
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
+            response = requests.post(f'{url}/deposito', json=dados)
+            if response.status_code == 200:
+                return jsonify({'message': response.json().get('message')}), 200
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
+
+    #Função para pegar uma conta de um banco externo
+    def busca_conta_externa(self, url, nome_banco, numero_conta): 
+        try:
+            dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco}
+            response = requests.get(f'{url}/get_conta', json=dados)
+            if response.status_code == 200:
+                pass
+                return 
+            elif response.status_code == 500: 
+                return jsonify({'message': response.json().get('message')}), 500
+        except Exception as e: 
+            print(f"Exceção: {e}")
+        
     @property
     def clientes(self):
         return self._clientes

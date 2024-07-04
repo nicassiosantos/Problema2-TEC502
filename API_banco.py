@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template, request, redirect, url_for, flash
 from Classes_auxiliares.classes_auxiliares_banco import Historico, Conta, Conta_conjunta, Cliente, Pessoa_fisica, Pessoa_juridica
-
 from banco import Banco
 import random
 import time
@@ -249,6 +248,19 @@ def get_conta(nome_banco, numero_conta):
         else: 
             return jsonify({'message': 'Banco inexistente'}), 500
 
+#Rota responsavel por obter o identificador do cliente logado 
+@app.route('/get_identificador', methods=['GET'])
+def get_identificador(): 
+    if banco.cliente_logado != None: 
+        return jsonify({'identificador': f'{banco.cliente_logado.identificador}'}), 200
+    else: 
+        return jsonify({'message': 'Não há cliente logado'}), 500
+
+#Rota responsavel por obter o nome do banco 
+@app.route('/get_nome_banco', methods=['GET'])
+def get_nome_banco(): 
+    return jsonify({'nome_banco': f'{banco.nome}'}), 200
+
 #Rota responsavél por realizar um deposito em qualquer conta que um banco possua
 @app.route('/deposito', methods=['POST'])
 def deposito():
@@ -295,7 +307,7 @@ def saque():
     data = request.get_json()
     numero_conta = data.get('numero_conta', '')
     valor = data.get('valor', 0)
-
+    valor = int(valor)
     if (numero_conta is None) or valor <= 0:
         return jsonify({'message': 'Número da conta e valor válido são obrigatórios'}), 500
     
@@ -488,6 +500,74 @@ def transferir():
         sucesso = True
         sucesso, msg = banco.desfazer_alterações(preparacao, sucesso)
         return jsonify({"success": False, "message": mensagem}), 500
+
+'''
+===============================================
+
+ROTAS FRONT
+
+===============================================
+'''
+
+#Rota para pagina de login
+@app.route('/')
+def login_page():
+    return render_template('login.html')
+
+#Rota para a página de Home
+@app.route('/home')
+def home_page():
+    try:
+        url = eval(f"URL_BANCO{NUMERO_BANCO}")
+
+        # 1. Obter o identificador do cliente através da rota /get_identificador
+        identificador_response = requests.get(f'{url}/get_identificador')  # Substitua pelo URL correto
+        if identificador_response.status_code == 200:
+            identificador = identificador_response.json()['identificador']
+        else:
+            identificador = None
+            # Lida com o caso em que não foi possível obter o identificador
+        
+        # 2. Se tiver identificador, obter as informações das contas do cliente
+        contas_info = []
+        if identificador:
+            contas_response = requests.get(f'{url}/contas_cliente/{identificador}')
+            if contas_response.status_code == 200:
+                contas_info = contas_response.json()['contas']
+            else:
+                # Lida com o caso em que não foi possível obter as contas
+                contas_info = []
+
+        # 3. Obter o nome do banco através da rota /get_nome_banco
+        nome_banco_response = requests.get(f'{url}/get_nome_banco')  # Substitua pelo URL correto
+        if nome_banco_response.status_code == 200:
+            nome_banco = nome_banco_response.json()['nome_banco']
+        else:
+            nome_banco = 'Banco Desconhecido'
+
+    except Exception as e:
+        print(f'Erro ao obter informações: {str(e)}')
+        nome_banco = 'Banco Desconhecido'
+        contas_info = []
+
+    # 4. Renderizar o template home.html passando as informações obtidas
+    return render_template('home.html', nome_banco=nome_banco, contas=contas_info)
+
+#Rota para a pagina de cadastro
+@app.route('/cadastro')
+def cadastro_page():
+    return render_template('cadastro.html') 
+
+#Rota para renderizar a página de depósito
+@app.route('/deposito_page')
+def deposito_page():
+    return render_template('deposito.html', nome_banco=banco.nome)  # Renderiza o template HTML para o depósito
+
+#Rota para acessar a página de saque
+@app.route('/saque_page')
+def saque_page():
+    # Renderiza o template saque.html (crie este template com os campos necessários)
+    return render_template('saque.html')
 
 if __name__ == '__main__':
     app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

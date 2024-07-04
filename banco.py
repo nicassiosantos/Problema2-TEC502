@@ -67,6 +67,10 @@ class Banco:
         else: 
             return False
 
+    #Função para deslogar cliente
+    def deslogar_cliente(self): 
+        self._cliente_logado = None
+
     #Função para buscar URL do banco a patir do nome
     def buscar_url(self, nome_banco): 
         bancos = self.bancos

@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const depositForm = document.getElementById('depositForm');
     const messageDiv = document.getElementById('message');
+    const homeButton = document.getElementById('homeButton');
 
     depositForm.addEventListener('submit', function(event) {
         event.preventDefault(); // Evita o comportamento padrão de enviar o formulário
@@ -35,5 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erro ao realizar depósito:', error);
             messageDiv.innerHTML = `<p>Erro ao realizar depósito. Por favor, tente novamente mais tarde.</p>`;
         });
+    });
+
+    // Lógica para o botão de voltar para home
+    homeButton.addEventListener('click', function() {
+        window.location.href = '/home';
     });
 });

@@ -1,5 +1,3 @@
-// home.js
-
 document.addEventListener('DOMContentLoaded', function() {
     // Lógica para redirecionar para a página de transferência
     const transferButton = document.getElementById('transferButton');
@@ -19,6 +17,22 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const numeroConta = button.getAttribute('data-conta');
             window.location.href = `/saque_page?numero_conta=${numeroConta}`;
+        });
+    });
+
+    // Lógica para o botão de logout
+    const logoutButton = document.getElementById('logoutButton');
+    logoutButton.addEventListener('click', function() {
+        fetch('/logout', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message); // Exibe a mensagem de logout bem-sucedido
+            window.location.href = '/'; // Redireciona para a página inicial
+        })
+        .catch(error => {
+            console.error('Erro ao fazer logout:', error);
         });
     });
 });

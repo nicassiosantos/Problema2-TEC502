@@ -144,6 +144,12 @@ def login():
     else:
         return jsonify({'message': 'Identificador ou senha incorretos'}), 401
 
+#Rota responsável por fazer o logout
+@app.route('/logout', methods =['POST'])
+def logout(): 
+    banco.deslogar_cliente()
+    return jsonify({'message': "Cliente deslogado com sucesso"}), 200
+
 #Rota responsável por obter todas as contas de um cliente em todos os bancos
 @app.route('/contas_cliente/<identificador>', methods=['GET'])
 def contas_cliente(identificador):
@@ -309,7 +315,7 @@ def saque():
     valor = data.get('valor', 0)
     valor = int(valor)
     if (numero_conta is None) or valor <= 0:
-        return jsonify({'message': 'Número da conta e valor válido são obrigatórios'}), 500
+        return jsonify({'message': 'Valor válido é obrigatório'}), 500
     
     numero_conta = int(numero_conta) 
 

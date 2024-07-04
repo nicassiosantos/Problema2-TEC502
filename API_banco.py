@@ -10,7 +10,7 @@ import json
 
 app = Flask(__name__)
 
-NUMERO_BANCO = os.getenv('NUMERO_BANCO', '3')
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '2')
 
 ip_banco1 = os.getenv('IP_BANCO3', '1')
 IP_BANCO1 = f"127.0.0.{ip_banco1}"
@@ -188,7 +188,7 @@ def contas_cliente(identificador):
                 elif response.status_code == 500: 
                     print(f'Nenhuma conta encontrada no banco {nome_banco}')
             except Exception as e: 
-                print(f"Exceção: {e}")
+                print(f"Exceção ocorreu")
     
 
     return jsonify({'contas': contas_info}), 200 
@@ -313,7 +313,7 @@ def saque():
     data = request.get_json()
     numero_conta = data.get('numero_conta', '')
     valor = data.get('valor', 0)
-    valor = int(valor)
+    valor = float(valor)
     if (numero_conta is None) or valor <= 0:
         return jsonify({'message': 'Valor válido é obrigatório'}), 500
     
@@ -466,7 +466,12 @@ def transferir():
     nome_banco_destino = data.get('nome_banco_destino')
     numero_conta_destino = data.get('numero_conta_destino')
     valor_conta_destino = data.get('valor_conta_destino', 0)
-    transferencias = data.get('transferencias')  # Lista de transferências: [{"numero_conta_origem": "...", "valor": ...}]
+    transferencias = data.get('transferencias')  
+    # Lista de transferências: 
+    # [{"numero_conta_origem": "...", 
+    # "nome_banco_origem": "...",
+    # "valor": ...
+    #  }]
 
     # Fase 1: Preparação
     preparados = True
@@ -526,14 +531,7 @@ def home_page():
     try:
         url = eval(f"URL_BANCO{NUMERO_BANCO}")
 
-        # 1. Obter o identificador do cliente através da rota /get_identificador
-        identificador_response = requests.get(f'{url}/get_identificador')  # Substitua pelo URL correto
-        if identificador_response.status_code == 200:
-            identificador = identificador_response.json()['identificador']
-        else:
-            identificador = None
-            # Lida com o caso em que não foi possível obter o identificador
-        
+        identificador = banco.cliente_logado.identificador
         # 2. Se tiver identificador, obter as informações das contas do cliente
         contas_info = []
         if identificador:
@@ -574,6 +572,39 @@ def deposito_page():
 def saque_page():
     # Renderiza o template saque.html (crie este template com os campos necessários)
     return render_template('saque.html')
+
+# Rota para a página de Transferência
+@app.route('/transferencia_page')
+def transferencia_page():
+    try:
+        url = eval(f"URL_BANCO{NUMERO_BANCO}")
+
+        identificador = banco.cliente_logado.identificador
+        contas_info = []
+
+        # 1. Se tiver identificador, obter as informações das contas do cliente
+        if identificador:
+            contas_response = requests.get(f'{url}/contas_cliente/{identificador}')
+            if contas_response.status_code == 200:
+                contas_info = contas_response.json()['contas']
+            else:
+                # Lida com o caso em que não foi possível obter as contas
+                contas_info = []
+
+        # 2. Obter o nome do banco através da rota /get_nome_banco
+        nome_banco_response = requests.get(f'{url}/get_nome_banco')
+        if nome_banco_response.status_code == 200:
+            nome_banco = nome_banco_response.json()['nome_banco']
+        else:
+            nome_banco = 'Banco Desconhecido'
+
+    except Exception as e:
+        print(f'Erro ao obter informações: {str(e)}')
+        nome_banco = 'Banco Desconhecido'
+        contas_info = []
+
+    # 3. Renderizar o template transferencia.html passando as informações obtidas
+    return render_template('transferencia.html', nome_banco=nome_banco, contas=contas_info)
 
 if __name__ == '__main__':
     app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

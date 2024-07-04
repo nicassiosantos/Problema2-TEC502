@@ -119,7 +119,7 @@ class Banco:
             numero_conta_origem = transferencia['numero_conta_origem']
             nome_banco_origem = transferencia['nome_banco_origem']
             valor = transferencia['valor'] 
-            valor = int(valor)
+            valor = float(valor)
 
             # Encontrar a conta de origem
             if nome_banco_origem == self.nome:

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Lógica para redirecionar para a página de transferência
     const transferButton = document.getElementById('transferButton');
     transferButton.addEventListener('click', function() {
-        window.location.href = '/transferencia';
+        window.location.href = '/transferencia_page';
     });
 
     // Lógica para redirecionar para a página de depósito

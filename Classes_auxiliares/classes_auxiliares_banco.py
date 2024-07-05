@@ -110,8 +110,6 @@ class ContaBase:
                 return True, "Preparação feita com sucesso"
             else: 
                 return False, "Preparação falhou, saldo insuficiente"
-        elif tipo == 'deposito': 
-            return True, "Preparação feita com sucesso"
         return False, "Preparação falhou"
 
     #Função para confirmar a transferência

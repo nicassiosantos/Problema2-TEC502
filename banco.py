@@ -125,6 +125,7 @@ class Banco:
             if nome_banco_origem == self.nome:
                 conta_origem = self.busca_conta(numero_conta_origem)
                 if not conta_origem:
+                    mensagem = "Conta não encontrada"
                     preparados = False
                     break
     
@@ -148,6 +149,7 @@ class Banco:
                                 preparados = False 
                                 break
                         else: 
+                            mensagem = response.json().get('message')
                             preparados = False 
                             break
                 if preparados == False: 
@@ -170,10 +172,12 @@ class Banco:
 
     #Função para realizar a confirmação de contas de para realizar transferencia  
     def confirmacao_contas(self, preparacao, sucesso_confirmacao):
+        response = False
         for nome_banco_conta,numero_conta,valor, tipo in preparacao:
             if nome_banco_conta == self.nome:
                 conta_origem = self.busca_conta(numero_conta)
                 if not conta_origem:
+                    mensagem = "Conta não encontrada"
                     sucesso_confirmacao = False 
                     break 
                 conta_origem.lock.acquire(blocking=True)
@@ -184,11 +188,14 @@ class Banco:
                     if nome_banco == nome_banco_conta: 
                         response = self.confirmacao_conta_externa(info['url'],numero_conta,nome_banco_conta,valor,tipo)  
                         if response.status_code == 200: 
-                            response.json().get('message')
+                            mensagem = response.json().get('message')
                         else: 
-                            response.json().get('message')
+                            mensagem = response.json().get('message')
                             sucesso_confirmacao = False 
                             break
+                if response == False: 
+                    mensagem = "Banco não encontrado"
+                    sucesso_confirmacao = False 
                 if sucesso_confirmacao == False: 
                     break 
 

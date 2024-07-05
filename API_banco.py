@@ -480,21 +480,6 @@ def transferir():
     #Preparação das contas que irão ter dinheiro retirado
     preparados, preparacao, mensagem = banco.preparacao_contas(transferencias, preparados, preparacao)
     
-    if preparados:
-        #Preparação da conta que irá ter dinheiro adicionado
-        for nome_banco, info in banco.bancos.items(): 
-            if nome_banco == nome_banco_destino: 
-                url = info['url']
-                response = banco.preparar_conta_externa(url, numero_conta_destino,nome_banco_destino, valor_conta_destino,"deposito")
-                if response.status_code == 200: 
-                    mensagem = response.json().get('message')
-                    preparacao.append((nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito"))
-                    break
-                else:
-                    mensagem = response.json().get('message')
-                    preparados = False
-                    break
-
     if not preparados:
         sucesso = True
         sucesso, msg = banco.desfazer_alterações(preparacao, sucesso)
@@ -502,6 +487,7 @@ def transferir():
 
     #Confirmação e commit das operações
     sucesso_confirmacao = True 
+    preparacao.append((nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito"))
     sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao)
 
     if sucesso_confirmacao:

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const numeroContaOrigem = input.getAttribute('data-conta');
                 const nomeBancoOrigem = input.getAttribute('data-banco');
                 transferencias.push({
-                    numero_conta_origem: numeroContaOrigem,
+                    numero_conta_origem: parseInt(numeroContaOrigem, 10),
                     nome_banco_origem: nomeBancoOrigem,
                     valor: valor
                 });
@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
             valor_conta_destino: valorTotal,
             transferencias: transferencias
         };
+
+        console.log(transferencias)
 
         fetch('/transferir', {
             method: 'POST',

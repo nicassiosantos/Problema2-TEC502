@@ -1,34 +1,28 @@
 from flask import Flask, request, jsonify, render_template, request, redirect, url_for, flash
 from Classes_auxiliares.classes_auxiliares_banco import Historico, Conta, Conta_conjunta, Cliente, Pessoa_fisica, Pessoa_juridica
 from banco import Banco
-import random
-import time
 import requests
 import os
-import json
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
 
-NUMERO_BANCO = os.getenv('NUMERO_BANCO', '2')
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '1')
 
-ip_banco1 = os.getenv('IP_BANCO3', '1')
-IP_BANCO1 = f"127.0.0.{ip_banco1}"
+host = "0.0.0.0"
+IP_BANCO1 = os.getenv('IP_BANCO1', "0.0.0.0")
 NOME_BANCO1 = os.getenv('NOME_BANCO1', 'Banco 1') 
-PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '5000')
+PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '4578')
 URL_BANCO1 = f"http://{IP_BANCO1}:{PORTA_BANCO1}"
 
-ip_banco2 = os.getenv('IP_BANCO2', '2')
-IP_BANCO2 = f"127.0.0.{ip_banco2}"
+IP_BANCO2 = os.getenv('IP_BANCO1=2', "0.0.0.0")
 NOME_BANCO2 = os.getenv('NOME_BANCO2', 'Banco 2') 
-PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '5000')
+PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '4574')
 URL_BANCO2 = f"http://{IP_BANCO2}:{PORTA_BANCO2}"
 
-
-ip_banco3 = os.getenv('IP_BANCO3', '3')
-IP_BANCO3 = f"127.0.0.{ip_banco3}"
+IP_BANCO3 = os.getenv('IP_BANCO3', "0.0.0.0")
 NOME_BANCO3 = os.getenv('NOME_BANCO3', 'Banco 3') 
-PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '5000')
+PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '4572')
 URL_BANCO3 = f"http://{IP_BANCO3}:{PORTA_BANCO3}"
 
 BANCOS = {
@@ -593,4 +587,4 @@ def transferencia_page():
     return render_template('transferencia.html', nome_banco=nome_banco, contas=contas_info)
 
 if __name__ == '__main__':
-    app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))
+    app.run(host=host, port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

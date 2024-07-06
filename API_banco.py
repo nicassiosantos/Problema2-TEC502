@@ -174,7 +174,7 @@ def contas_cliente(identificador):
         else: 
             try:
                 url = info['url']
-                response = requests.get(f'{url}/get_contas/{identificador}', )
+                response = requests.get(f'{url}/get_contas/{identificador}', timeout=2)
                 if response.status_code == 200:
                     dados = response.json()
                     lista_contas = dados["contas"] 
@@ -481,7 +481,6 @@ def transferir():
 
     #Confirmação e commit das operações
     sucesso_confirmacao = True 
-    preparacao.append((nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito"))
     sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao)
 
     if sucesso_confirmacao:
@@ -587,4 +586,4 @@ def transferencia_page():
     return render_template('transferencia.html', nome_banco=nome_banco, contas=contas_info)
 
 if __name__ == '__main__':
-    app.run(host=host, port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))
+    app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

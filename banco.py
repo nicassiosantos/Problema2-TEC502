@@ -99,7 +99,7 @@ class Banco:
     def deposito_outro_banco(self, url, numero_conta, nome_banco, valor): 
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
-            response = requests.post(f'{url}/deposito', json=dados)
+            response = requests.post(f'{url}/deposito', json=dados, timeout=5)
             if response.status_code == 200:
                 return jsonify({'message': response.json().get('message')}), 200
             elif response.status_code == 500: 
@@ -177,7 +177,7 @@ class Banco:
     def preparar_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
-            response = requests.post(f'{url}/preparar_transferencia', json=dados)
+            response = requests.post(f'{url}/preparar_transferencia', json=dados, timeout=5)
             if response.status_code == 200:
                 return response
             elif response.status_code == 500: 
@@ -244,7 +244,7 @@ class Banco:
     def confirmacao_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
-            response = requests.post(f'{url}/confirmar_transferencia', json=dados)
+            response = requests.post(f'{url}/confirmar_transferencia', json=dados, timeout=5)
             if response.status_code == 200:
                 return response
                 #return jsonify({'message': response.json().get('message')}), 200

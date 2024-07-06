@@ -15,7 +15,7 @@ NOME_BANCO1 = os.getenv('NOME_BANCO1', 'Banco 1')
 PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '4578')
 URL_BANCO1 = f"http://{IP_BANCO1}:{PORTA_BANCO1}"
 
-IP_BANCO2 = os.getenv('IP_BANCO1=2', "0.0.0.0")
+IP_BANCO2 = os.getenv('IP_BANCO2', "0.0.0.0")
 NOME_BANCO2 = os.getenv('NOME_BANCO2', 'Banco 2') 
 PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '4574')
 URL_BANCO2 = f"http://{IP_BANCO2}:{PORTA_BANCO2}"

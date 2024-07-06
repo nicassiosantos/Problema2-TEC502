@@ -484,7 +484,7 @@ def transferir():
 
     #Confirmação e commit das operações
     sucesso_confirmacao = True 
-    sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao)
+    sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao, nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito")
 
     if sucesso_confirmacao:
         return jsonify({"success": True, "message": "Transferência realizada com sucesso"}), 200

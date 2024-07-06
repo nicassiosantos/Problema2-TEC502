@@ -107,7 +107,10 @@ def cadastrar_conta_conjunta():
 
         if not cliente1 or not cliente2:
             return jsonify({'message': 'Um ou ambos os clientes não foram encontrados'}), 404
-
+            
+        if banco.busca_conta_conjunta(identificador1, identificador2): 
+            return jsonify({'message': 'Conta conjunta com esses identificadores já existe'}), 404
+        
         conta_conjunta = Conta_conjunta(banco.numero, banco.nome, [cliente1, cliente2])
         cliente1.adicionar_conta(conta_conjunta)
         cliente2.adicionar_conta(conta_conjunta)

@@ -38,7 +38,23 @@ class Banco:
         except Exception as e:
             print(f"Exceção: {e}")
             return False
-
+            
+    #Função que recebe dois identificadores e verifica se já possuem uma conta conjunta
+    def busca_conta_conjunta(self, identificador1, identificador2):
+        existe = False
+        numero_cliente = 0
+        for cliente in self.clientes: 
+            for conta in cliente.contas: 
+                for cliente_conta in conta.clientes:
+                    if (cliente_conta.identificador == identificador1) or (cliente_conta.identificador == identificador2):
+                        existe = True 
+                        numero_cliente +=1 
+                        if numero_cliente == 2: 
+                            return existe 
+                numero_cliente = 0 
+                existe = False 
+        return existe
+    
     #Função responsável por cadastrar um cliente
     def cadastro_cliente(self, cliente):
         self._clientes.append(cliente)
@@ -83,7 +99,7 @@ class Banco:
     def deposito_outro_banco(self, url, numero_conta, nome_banco, valor): 
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor}
-            response = requests.post(f'{url}/deposito', json=dados)
+            response = requests.post(f'{url}/deposito', json=dados, timeout=5)
             if response.status_code == 200:
                 return jsonify({'message': response.json().get('message')}), 200
             elif response.status_code == 500: 
@@ -161,7 +177,7 @@ class Banco:
     def preparar_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
-            response = requests.post(f'{url}/preparar_transferencia', json=dados)
+            response = requests.post(f'{url}/preparar_transferencia', json=dados, timeout=5)
             if response.status_code == 200:
                 return response
             elif response.status_code == 500: 
@@ -171,7 +187,7 @@ class Banco:
             print(f"Exceção: {e}")
 
     #Função para realizar a confirmação de contas de para realizar transferencia  
-    def confirmacao_contas(self, preparacao, sucesso_confirmacao):
+    def confirmacao_contas(self, preparacao, sucesso_confirmacao, nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1):
         response = False
         for nome_banco_conta,numero_conta,valor, tipo in preparacao:
             if nome_banco_conta == self.nome:
@@ -199,13 +215,36 @@ class Banco:
                 if sucesso_confirmacao == False: 
                     break 
 
+
+        if nome_banco_destino == self.nome:
+                conta_origem = self.busca_conta(numero_conta_destino)
+                if not conta_origem:
+                    mensagem = "Conta não encontrada"
+                    sucesso_confirmacao = False  
+                conta_origem.lock.acquire(blocking=True)
+                sucesso_confirmacao, mensagem = conta_origem.confirmar_transferencia(nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1)
+                conta_origem.lock.release()
+        else: 
+            for nome_banco, info in self.bancos.items(): 
+                if nome_banco == nome_banco_destino: 
+                    response = self.confirmacao_conta_externa(info['url'],numero_conta_destino,nome_banco_destino,valor_conta_destino,tipo1)  
+                    if response.status_code == 200: 
+                        mensagem = response.json().get('message')
+                    else: 
+                        mensagem = response.json().get('message')
+                        sucesso_confirmacao = False 
+                        break
+            if response == False: 
+                mensagem = "Banco não encontrado"
+                sucesso_confirmacao = False
+
         return sucesso_confirmacao, mensagem
 
     #Função para confirmar em uma conta de um banco externo 
     def confirmacao_conta_externa(self, url, numero_conta, nome_banco, valor, tipo):
         try:
             dados = {'numero_conta':numero_conta, 'nome_banco': nome_banco, 'valor': valor, 'tipo': tipo}
-            response = requests.post(f'{url}/confirmar_transferencia', json=dados)
+            response = requests.post(f'{url}/confirmar_transferencia', json=dados, timeout=5)
             if response.status_code == 200:
                 return response
                 #return jsonify({'message': response.json().get('message')}), 200

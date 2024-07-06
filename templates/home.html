@@ -31,7 +31,9 @@
                         <p>Nome do Banco: {{ conta.nome_banco }}</p>
                     </div>
                     <div class="conta-actions">
+                        {% if conta.nome_banco == nome_banco %}
                         <button data-conta="{{ conta.numero_conta }}">Saque</button>
+                        {% endif %}
                     </div>
                 </li>
                 {% endfor %}

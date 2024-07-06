@@ -7,20 +7,20 @@ import os
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-NUMERO_BANCO = os.getenv('NUMERO_BANCO', '1')
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '3')
 
 host = "0.0.0.0"
-IP_BANCO1 = os.getenv('IP_BANCO1', "0.0.0.0")
+IP_BANCO1 = os.getenv('IP_BANCO1', "127.0.0.1")
 NOME_BANCO1 = os.getenv('NOME_BANCO1', 'Banco 1') 
 PORTA_BANCO1 = os.getenv('PORTA_BANCO1', '4578')
 URL_BANCO1 = f"http://{IP_BANCO1}:{PORTA_BANCO1}"
 
-IP_BANCO2 = os.getenv('IP_BANCO1=2', "0.0.0.0")
+IP_BANCO2 = os.getenv('IP_BANCO2', "127.0.0.2")
 NOME_BANCO2 = os.getenv('NOME_BANCO2', 'Banco 2') 
 PORTA_BANCO2 = os.getenv('PORTA_BANCO2', '4574')
 URL_BANCO2 = f"http://{IP_BANCO2}:{PORTA_BANCO2}"
 
-IP_BANCO3 = os.getenv('IP_BANCO3', "0.0.0.0")
+IP_BANCO3 = os.getenv('IP_BANCO3', "127.0.0.3")
 NOME_BANCO3 = os.getenv('NOME_BANCO3', 'Banco 3') 
 PORTA_BANCO3 = os.getenv('PORTA_BANCO3', '4572')
 URL_BANCO3 = f"http://{IP_BANCO3}:{PORTA_BANCO3}"
@@ -107,7 +107,10 @@ def cadastrar_conta_conjunta():
 
         if not cliente1 or not cliente2:
             return jsonify({'message': 'Um ou ambos os clientes não foram encontrados'}), 404
-
+            
+        if banco.busca_conta_conjunta(identificador1, identificador2): 
+            return jsonify({'message': 'Conta conjunta com esses identificadores já existe'}), 404
+        
         conta_conjunta = Conta_conjunta(banco.numero, banco.nome, [cliente1, cliente2])
         cliente1.adicionar_conta(conta_conjunta)
         cliente2.adicionar_conta(conta_conjunta)
@@ -174,7 +177,7 @@ def contas_cliente(identificador):
         else: 
             try:
                 url = info['url']
-                response = requests.get(f'{url}/get_contas/{identificador}', )
+                response = requests.get(f'{url}/get_contas/{identificador}', timeout=2)
                 if response.status_code == 200:
                     dados = response.json()
                     lista_contas = dados["contas"] 
@@ -481,8 +484,7 @@ def transferir():
 
     #Confirmação e commit das operações
     sucesso_confirmacao = True 
-    preparacao.append((nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito"))
-    sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao)
+    sucesso_confirmacao, mensagem  = banco.confirmacao_contas(preparacao, sucesso_confirmacao, nome_banco_destino, numero_conta_destino, valor_conta_destino, "deposito")
 
     if sucesso_confirmacao:
         return jsonify({"success": True, "message": "Transferência realizada com sucesso"}), 200
@@ -587,4 +589,4 @@ def transferencia_page():
     return render_template('transferencia.html', nome_banco=nome_banco, contas=contas_info)
 
 if __name__ == '__main__':
-    app.run(host=host, port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))
+    app.run(host=eval(f"IP_BANCO{NUMERO_BANCO}"), port=eval(f"PORTA_BANCO{NUMERO_BANCO}"))

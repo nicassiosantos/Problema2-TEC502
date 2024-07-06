@@ -187,7 +187,7 @@ class Banco:
             print(f"Exceção: {e}")
 
     #Função para realizar a confirmação de contas de para realizar transferencia  
-    def confirmacao_contas(self, preparacao, sucesso_confirmacao):
+    def confirmacao_contas(self, preparacao, sucesso_confirmacao, nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1):
         response = False
         for nome_banco_conta,numero_conta,valor, tipo in preparacao:
             if nome_banco_conta == self.nome:
@@ -214,6 +214,29 @@ class Banco:
                     sucesso_confirmacao = False 
                 if sucesso_confirmacao == False: 
                     break 
+
+
+        if nome_banco_destino == self.nome:
+                conta_origem = self.busca_conta(numero_conta_destino)
+                if not conta_origem:
+                    mensagem = "Conta não encontrada"
+                    sucesso_confirmacao = False  
+                conta_origem.lock.acquire(blocking=True)
+                sucesso_confirmacao, mensagem = conta_origem.confirmar_transferencia(nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1)
+                conta_origem.lock.release()
+        else: 
+            for nome_banco, info in self.bancos.items(): 
+                if nome_banco == nome_banco_destino: 
+                    response = self.confirmacao_conta_externa(info['url'],numero_conta_destino,nome_banco_destino,valor_conta_destino,tipo1)  
+                    if response.status_code == 200: 
+                        mensagem = response.json().get('message')
+                    else: 
+                        mensagem = response.json().get('message')
+                        sucesso_confirmacao = False 
+                        break
+            if response == False: 
+                mensagem = "Banco não encontrado"
+                sucesso_confirmacao = False
 
         return sucesso_confirmacao, mensagem
 

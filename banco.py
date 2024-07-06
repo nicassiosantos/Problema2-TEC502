@@ -38,7 +38,23 @@ class Banco:
         except Exception as e:
             print(f"Exceção: {e}")
             return False
-
+            
+    #Função que recebe dois identificadores e verifica se já possuem uma conta conjunta
+    def busca_conta_conjunta(self, identificador1, identificador2):
+        existe = False
+        numero_cliente = 0
+        for cliente in self.clientes: 
+            for conta in cliente.contas: 
+                for cliente_conta in conta.clientes:
+                    if (cliente_conta.identificador == identificador1) or (cliente_conta.identificador == identificador2):
+                        existe = True 
+                        numero_cliente +=1 
+                        if numero_cliente == 2: 
+                            return existe 
+                numero_cliente = 0 
+                existe = False 
+        return existe
+    
     #Função responsável por cadastrar um cliente
     def cadastro_cliente(self, cliente):
         self._clientes.append(cliente)

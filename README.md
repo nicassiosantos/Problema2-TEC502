@@ -131,7 +131,7 @@ Ao clicar no botão depósito é possivel realizar um depósito, passando o valo
 
 Rota atual:"{url}/transferencia_page"
 
-Ao clicar no botão de transferência é redirecionado para essa pagina em que pode tranferir o dinheiro para uma conta informando o nome do banco, o numero da conta e valor é definido por outro campos que serão explicados abaixo 
+Ao clicar no botão de transferência é redirecionado para essa pagina em que pode tranferir o dinheiro para uma conta informando o nome do banco, o numero da conta e valor, este que é definido por outro campos que serão explicados abaixo 
 
 <p align="center">
     <img src="img\Transfpt2.png" alt="app_ft1">

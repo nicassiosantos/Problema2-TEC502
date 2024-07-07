@@ -140,7 +140,7 @@ Ao clicar no botão de transferência é redirecionado para essa pagina em que p
 
 Rota atual:"{url}/transferencia_page" 
 
-Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos, para serem retirados de cada conta, pelo campo valor a transferir.após preencher os dados só basta clicar em realizar transferência.
+Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos para serem retirados de cada conta, pelo campo valor a transferir.após preencher os dados só basta clicar em realizar transferência.
 
 ## Introdução 
 Este projeto é uma solução para um problema proposto para disciplina de Concorrência e Conectividade, da Universidade Estadual de Feira de Santana(UEFS).O contexto foi baseado na ideia de que o governo de um país onde não existe banco central deseja implementar um sistema semelhante ao Pix do Brasil para permitir transações financeiras entre clientes de diferentes bancos. Devido à ausência de um banco central, o sistema não pode utilizar recursos centralizados para controlar as transações, exigindo uma solução distribuída. 

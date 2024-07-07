@@ -2,8 +2,8 @@
 
 1. [Utilizando a Aplicação](#utilizando-a-aplicação)
 2. [Introdução](#introdução)
-3. [Solução Proposta](#solução-proposta)
-    - [Arquitetura Distribuída](#arquitetura-distribuída)
+3. [Produto Desenvolvido](#produto-desenvolvido)
+    - [Arquitetura Implementada](#arquitetura-implementada)
     - [Módulos do Sistema](#módulos-do-sistema)
     - [Tecnologias Utilizadas](#tecnologias-utilizadas)
     - [Protocolo Two-Phase Commit (2PC)](#protocolo-two-phase-commit-2pc)
@@ -140,10 +140,31 @@ Ao clicar no botão de transferência é redirecionado para essa pagina em que p
 
 Rota atual:"{url}/transferencia_page" 
 
-Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos para serem retirados de cada conta, pelo campo valor a transferir.após preencher os dados só basta clicar em realizar transferência.
+Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos para serem retirados de cada conta, pelo campo valor a transferir.Após preencher os dados só basta clicar em realizar transferência.
 
 ## Introdução 
 Este projeto é uma solução para um problema proposto para disciplina de Concorrência e Conectividade, da Universidade Estadual de Feira de Santana(UEFS).O contexto foi baseado na ideia de que o governo de um país onde não existe banco central deseja implementar um sistema semelhante ao Pix do Brasil para permitir transações financeiras entre clientes de diferentes bancos. Devido à ausência de um banco central, o sistema não pode utilizar recursos centralizados para controlar as transações, exigindo uma solução distribuída. 
 
-A partir disso, utilizando o python 3.11, foi implementado um sistema bancário distríbuido, em que é possivel fazer operações de contas de diferentes bancos de um mesmo cliente em um único banco,para este propósito, foram utilizadas rotas HTTP, com o auxilio do framework flask, aliado ao javascript, html e css, para construção das telas para utilização.O relatório será dividido em 3 seções, Introdução, Solução Proposta e e Conclusão, além da seção de que explica como utilizaro produto. 
-    
+A partir disso, utilizando o python 3.11, foi implementado um sistema bancário distríbuido, em que é possivel fazer operações de contas de diferentes bancos de um mesmo cliente em um único banco,para este propósito, foram utilizadas rotas HTTP, com o auxilio do framework flask, aliado ao javascript, html e css, para construção das telas para utilização.O relatório será dividido em 3 seções, Introdução, Solução Proposta e e Conclusão, além da seção de que explica como utilizar o produto. 
+
+## Produto Desenvolvido
+
+A solução implementada resultou em um sistema distriubuído de bancos, que conseguem realizar todas as operações, sem a necessidade de um intermediador para essa finalidade.Para melhor explicar este tópico essa seção foi divida em Arquitetura Implementada. 
+
+
+### Arquitetura Implementada 
+
+O sistema bancário desenvolvido adota uma arquitetura que permite que cada banco integrante opere de forma autônoma e também realiza consulta com outros através de protcolos HTTP com outros bancos conforme necessário para certas operações.
+
+<p align="center">
+    <img src="img\Arquitetura.png" alt="app_ft1">
+</p>
+<p align="center">Arquitetura</p>  
+
+Características Principais:
+
+- Autonomia: Cada banco dentro do sistema é independente, podendo realizar suas operações sem a necessidade de interagir constantemente com outros bancos.
+
+- Interoperabilidade: Embora os bancos sejam autônomos, eles podem se comunicar e trocar informações quando necessário. Essa interoperabilidade é alcançada através de interfaces e protocolos de comunicação padronizados, garantindo que os dados possam ser compartilhados de maneira eficiente e segura.
+
+- Solicitação por demanda: A solicitação entre bancos ocorre somente quando necessário. Para certas operações,o sistema realiza consultas específicas ou trocas de mensagens utilizando o protocolo HTTP. Esse mecanismo garante que as operações sejam concluídas de maneira consistente e precisa.

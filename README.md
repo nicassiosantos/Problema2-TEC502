@@ -21,7 +21,7 @@ Para Utilizar a aplicação desenvolvida é necessário seguir uma sequência de
   
 ### Executar a imagem 
 
-  O sistema desenvolvido comporta até 3 ativos, é necessario rodar esse comando em 3 máquinas/IPS diferentes para que se tenha o ambiente da aplicação em todo seu suporte
+  O sistema desenvolvido comporta até 3 ativos, é necessario rodar esse comando em 3 máquinas/IPS diferentes para que se tenha o ambiente da aplicação em todo seu suporte 
 
 <p align="center">
     <img src="img\env.png" alt="app_ft1">
@@ -57,7 +57,81 @@ Para Utilizar a aplicação desenvolvida é necessário seguir uma sequência de
 
       docker run --rm --network=host -it -e NUMERO_BANCO=3 -e IP_BANCO1=127.0.0.1 -e IP_BANCO2=127.0.0.2 antnicassio/bank
 
-  Vale destacar que as variavéis de ambiente estão disponiveis para serem utilizadas a depender da sua situação.
+  Vale destacar que as variavéis de ambiente estão disponiveis para serem utilizadas a depender da sua situação. 
+
+### Telas e rotas 
+
+<p align="center">
+    <img src="img\Login.png" alt="app_ft1">
+</p>
+<p align="center">Login</p> 
+
+Rota atual:"{url}/"
+Ao entrar na url você passada entrar nessa pagina onde pode fazer o login ou cadastrar uma conta.
+
+<p align="center">
+    <img src="img\tiposcadastro.png" alt="app_ft1">
+</p>
+<p align="center">Escolha de cadastro</p> 
+
+Rota atual:"{url}/cadastro"
+Na tela de cadastro poderá escolher entre se cadastrar como pessoa fisica, juridica ou fazer uma conta conjunta. 
+
+<p align="center">
+    <img src="img\cadastrofis.png" alt="app_ft1">
+</p>
+<p align="center">Cadastro pessoa Física</p> 
+
+Rota atual:"{url}/cadastro"
+Escolhendo pessoa fisica poderá se cadastrar, e assim ganhando uma conta a partir disso, pessoa jurídica possui a mesma formatação, modificando apenas o CPF por CNPJ. 
+
+<p align="center">
+    <img src="img\Cadastroconj.png" alt="app_ft1">
+</p>
+<p align="center">Cadastro conta conjunta</p>  
+
+Rota atual:"{url}/cadastro"
+Pode-se criar uma conta conjunta a partir do identificador de duas contas existentes.
+
+<p align="center">
+    <img src="img\Home.png" alt="app_ft1">
+</p>
+<p align="center">Home</p>  
+
+Rota atual:"{url}/home"
+Após realizar o login terá a tela de home contendo todas as suas contas em todos os bancos em que possui conta, permitindo fazer depósito, transferência e saque.È válido lembrar que o saque só pode ser realizado em contas que do banco no qual você realizou o login.
+
+<p align="center">
+    <img src="img\Saque.png" alt="app_ft1">
+</p>
+<p align="center">Saque</p>  
+
+Rota atual:"{url}/saque_page?numero_conta=x"
+Ao clicar no botão saque, é redirecionado para pagina de Saque em que é possivel retirar um valor da conta escolhida
+
+<p align="center">
+    <img src="img\deposito.png" alt="app_ft1">
+</p>
+<p align="center">Depósito</p> 
+
+Rota atual:"{url}/deposito_page"
+Ao clicar no botão depósito é possivel realizar um depósito, passando o valor, numero da conta e o nome do banco  
+
+<p align="center">
+    <img src="img\Transfpt1.png" alt="app_ft1">
+</p>
+<p align="center">Transferência parte 1</p> 
+
+Rota atual:"{url}/transferencia_page"
+Ao clicar no botão de transferência é redirecionado para essa pagina em que pode tranferir o dinheiro para uma conta informando o nome do banco, o numero da conta e valor é definido por outro campos que serão explicados abaixo 
+
+<p align="center">
+    <img src="img\Transfpt2.png" alt="app_ft1">
+</p>
+<p align="center">Transferência parte 2</p> 
+
+Rota atual:"{url}/transferencia_page" 
+Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos, para serem retirados de cada conta, pelo campo valor a transferir.após preencher os dados só basta clicar em realizar transferência.
 
 ## Introdução 
 Este projeto é uma solução para um problema proposto para disciplina de Concorrência e Conectividade, da Universidade Estadual de Feira de Santana(UEFS).O contexto foi baseado na ideia de que o governo de um país onde não existe banco central deseja implementar um sistema semelhante ao Pix do Brasil para permitir transações financeiras entre clientes de diferentes bancos. Devido à ausência de um banco central, o sistema não pode utilizar recursos centralizados para controlar as transações, exigindo uma solução distribuída. 

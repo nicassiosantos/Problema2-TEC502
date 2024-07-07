@@ -7,7 +7,7 @@ import os
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-NUMERO_BANCO = os.getenv('NUMERO_BANCO', '3')
+NUMERO_BANCO = os.getenv('NUMERO_BANCO', '1')
 
 host = "0.0.0.0"
 IP_BANCO1 = os.getenv('IP_BANCO1', "0.0.0.0")

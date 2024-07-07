@@ -67,6 +67,7 @@ Para Utilizar a aplicação desenvolvida é necessário seguir uma sequência de
 <p align="center">Login</p> 
 
 Rota atual:"{url}/"
+
 Ao entrar na url você passada entrar nessa pagina onde pode fazer o login ou cadastrar uma conta.
 
 <p align="center">
@@ -75,6 +76,7 @@ Ao entrar na url você passada entrar nessa pagina onde pode fazer o login ou ca
 <p align="center">Escolha de cadastro</p> 
 
 Rota atual:"{url}/cadastro"
+
 Na tela de cadastro poderá escolher entre se cadastrar como pessoa fisica, juridica ou fazer uma conta conjunta. 
 
 <p align="center">
@@ -83,6 +85,7 @@ Na tela de cadastro poderá escolher entre se cadastrar como pessoa fisica, juri
 <p align="center">Cadastro pessoa Física</p> 
 
 Rota atual:"{url}/cadastro"
+
 Escolhendo pessoa fisica poderá se cadastrar, e assim ganhando uma conta a partir disso, pessoa jurídica possui a mesma formatação, modificando apenas o CPF por CNPJ. 
 
 <p align="center">
@@ -91,6 +94,7 @@ Escolhendo pessoa fisica poderá se cadastrar, e assim ganhando uma conta a part
 <p align="center">Cadastro conta conjunta</p>  
 
 Rota atual:"{url}/cadastro"
+
 Pode-se criar uma conta conjunta a partir do identificador de duas contas existentes.
 
 <p align="center">
@@ -99,6 +103,7 @@ Pode-se criar uma conta conjunta a partir do identificador de duas contas existe
 <p align="center">Home</p>  
 
 Rota atual:"{url}/home"
+
 Após realizar o login terá a tela de home contendo todas as suas contas em todos os bancos em que possui conta, permitindo fazer depósito, transferência e saque.È válido lembrar que o saque só pode ser realizado em contas que do banco no qual você realizou o login.
 
 <p align="center">
@@ -107,6 +112,7 @@ Após realizar o login terá a tela de home contendo todas as suas contas em tod
 <p align="center">Saque</p>  
 
 Rota atual:"{url}/saque_page?numero_conta=x"
+
 Ao clicar no botão saque, é redirecionado para pagina de Saque em que é possivel retirar um valor da conta escolhida
 
 <p align="center">
@@ -115,6 +121,7 @@ Ao clicar no botão saque, é redirecionado para pagina de Saque em que é possi
 <p align="center">Depósito</p> 
 
 Rota atual:"{url}/deposito_page"
+
 Ao clicar no botão depósito é possivel realizar um depósito, passando o valor, numero da conta e o nome do banco  
 
 <p align="center">
@@ -123,6 +130,7 @@ Ao clicar no botão depósito é possivel realizar um depósito, passando o valo
 <p align="center">Transferência parte 1</p> 
 
 Rota atual:"{url}/transferencia_page"
+
 Ao clicar no botão de transferência é redirecionado para essa pagina em que pode tranferir o dinheiro para uma conta informando o nome do banco, o numero da conta e valor é definido por outro campos que serão explicados abaixo 
 
 <p align="center">
@@ -131,6 +139,7 @@ Ao clicar no botão de transferência é redirecionado para essa pagina em que p
 <p align="center">Transferência parte 2</p> 
 
 Rota atual:"{url}/transferencia_page" 
+
 Em transferência o valor a ser transferido para uma conta é definido a partir da soma dos valores que irão ser inseridos, para serem retirados de cada conta, pelo campo valor a transferir.após preencher os dados só basta clicar em realizar transferência.
 
 ## Introdução 

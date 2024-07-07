@@ -156,7 +156,7 @@ A solução implementada resultou em um sistema distriubuído de bancos, que con
 O sistema bancário desenvolvido adota uma arquitetura que permite que cada banco integrante opere de forma autônoma e também realiza consulta com outros através de protcolos HTTP com outros bancos conforme necessário para certas operações.
 
 <p align="center">
-    <img src="img\Arquitetura.png" alt="app_ft1">
+    <img src="img\Arquitetura1.png" alt="app_ft1">
 </p>
 <p align="center">Arquitetura</p>  
 
@@ -192,5 +192,18 @@ Além das funcionalidades principais, o aplicativo inclui rotas para gerenciamen
 #### Templates e static 
 Estas pastas são utilizadas para disponibilizadas os recursos que são utilizados para moldar a interface.A pasta template armazena os arquivos HTML que constituem as páginas da interface do usuário. Por outro lado, a pasta static contém arquivos estáticos como CSS, JavaScript que são servidos diretamente para o navegador do usuário.
 
+### Protocolo Two-Phase Commit (2PC) 
+Para implementação da operação de transferência que é um conjuto de de operações, foi escolhido o protocolo two-phase commit(2PC), através dele é possível garantir a atomicidade da transação, fazendo que uma transação só seja concluída se feita po inteiro. O algoritmo é baseado em duas fases:  
 
+#### Fase de Preparação:
+
+- A rota começa ao receber dados de uma solicitação POST, contendo informações sobre a transferência, como banco e conta de destino, valor e lista de transferências.
+- As contas que terão dinheiro retirados na transferências são preparadas para a operação. Uma verificação inicial (preparados) determina se todas as contas podem prosseguir com a transação e o dinheiro que vai ser enviado é retirado da conta. 
+- Se a preparação falha em qualquer ponto, a função `desfazer_alterações` é chamada para reverter quaisquer alterações feitas durante a preparação, assegurando que nenhum estado intermediário inconsistente permaneça.
+
+#### Fase de Confirmação:
+
+- Se a fase de preparação for bem-sucedida, a transação é confirmada. Isso envolve atualizar o saldo das contas conforme necessário.
+- A confirmação é feita com uma chamada à função `confirmacao_contas`, que aplica as mudanças de maneira definitiva, fazendo com que a conta destino finalmente receba o dinheiro.
+- Se a confirmação é bem-sucedida, uma mensagem de sucesso é retornada. Caso contrário, a função `desfazer_alterações` é novamente chamada para reverter quaisquer mudanças, garantindo que o sistema retorne ao estado inicial antes da tentativa de transferência.
 

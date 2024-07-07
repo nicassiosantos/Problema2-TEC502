@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
             transferencias: transferencias
         };
 
-        console.log(transferencias)
-
         fetch('/transferir', {
             method: 'POST',
             headers: {

@@ -160,7 +160,6 @@ class ContaBase:
         mensagem = "Tipo especificado, incorreto"
         return (False, mensagem)
 
-
 class Conta(ContaBase):
     def __init__(self, numero, nome_banco, cliente, **kw):
         super().__init__(numero, nome_banco, [cliente], **kw)

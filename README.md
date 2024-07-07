@@ -5,9 +5,8 @@
 3. [Produto Desenvolvido](#produto-desenvolvido)
     - [Arquitetura Implementada](#arquitetura-implementada)
     - [Módulos do Sistema](#módulos-do-sistema)
-    - [Tecnologias Utilizadas](#tecnologias-utilizadas)
     - [Protocolo Two-Phase Commit (2PC)](#protocolo-two-phase-commit-2pc)
-    - [Fluxo de Transações](#fluxo-de-transações)
+    - [Rotas principais](#rotas-principais)
 4. [Conclusão](#conclusão)
 
 ## Utilizando A Aplicação 
@@ -168,3 +167,30 @@ Características Principais:
 - Interoperabilidade: Embora os bancos sejam autônomos, eles podem se comunicar e trocar informações quando necessário. Essa interoperabilidade é alcançada através de interfaces e protocolos de comunicação padronizados, garantindo que os dados possam ser compartilhados de maneira eficiente e segura.
 
 - Solicitação por demanda: A solicitação entre bancos ocorre somente quando necessário. Para certas operações,o sistema realiza consultas específicas ou trocas de mensagens utilizando o protocolo HTTP. Esse mecanismo garante que as operações sejam concluídas de maneira consistente e precisa.
+
+
+### Módulos do Sistema 
+
+O sistema foi dividido em 5 módulos/arquivos principais para que garantem sue funcionamento, sendo eles Classes auxiliares, Banco, API banco, templates e static, estes que serão melhor descritos nos tópicos abaixo.
+
+#### Classes auxiliares 
+
+Este arquivo contém funcionalidades básicas para contas e transações, incluindo depósitos, saques e transferências realizadas em uma única conta. Ele suporta contas individuais e conjuntas, bem como clientes individuais e corporativos, utilizando classes como ContaBase, Conta, Conta_conjunta, Cliente, Pessoa_fisica e Pessoa_juridica. O sistema garante segurança em operações concorrentes através de bloqueios (threading.Lock).Nesse arquivo contém a forma como o saldo de uma conta é modificado diretamente tanto para retirar algum valor, quanto para colocar. 
+
+#### Banco
+O arquivo contém a classe Banco que gerencia clientes, contas e operações bancárias. A classe possui métodos para cadastrar clientes, criar contas, realizar login e logout de clientes, buscar contas por identificador, buscar contas conjuntas, além de métodos para preparar e confirmar transferências tanto internas quanto para bancos externos via requisições HTTP. A integração com outros bancos é feita através de URLs definidas externamente. A classe também inclui métodos para desfazer transferências e para buscar informações de contas em bancos externos.
+
+O código faz uso de concorrência através de bloqueios (lock.acquire() e lock.release()) para garantir a consistência durante operações críticas, como transferências entre contas. Além disso, ele utiliza a biblioteca requests para realizar requisições HTTP para serviços externos, como outros bancos, para operações como depósitos, preparação e confirmação de transferências.
+
+### API Banco 
+Este arquivo contem as rotas para o funcionamento do banco em si. Inicialmente, os usuários podem se cadastrar como pessoas físicas, pessoas jurídicas ou optar por contas conjuntas. Após o cadastro, é possível realizar login  e efetuar operações como depósitos, saques e transferências entre contas.
+
+O arquivo também tem mecanismo de consulta, onde os clientes podem verificar informações detalhadas sobre suas contas. A interface de usuário é intuitiva, permitindo uma experiência fluida desde o login até a execução de operações financeiras complexas. Para garantir a integridade das transações, o aplicativo utiliza o protocolo Two-Phase Commit (2PC) para coordenação de transações distribuídas entre múltiplas instâncias bancárias, assegurando que as operações sejam concluídas de forma consistente e segura que será mais profundamente explicada em um tópico abaixo.
+
+Além das funcionalidades principais, o aplicativo inclui rotas para gerenciamento de sessões de usuário, permitindo o logout seguro e protegendo informações sensíveis durante a navegação.
+
+#### Templates e static 
+Estas pastas são utilizadas para disponibilizadas os recursos que são utilizados para moldar a interface.A pasta template armazena os arquivos HTML que constituem as páginas da interface do usuário. Por outro lado, a pasta static contém arquivos estáticos como CSS, JavaScript que são servidos diretamente para o navegador do usuário.
+
+
+

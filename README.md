@@ -1,13 +1,14 @@
 # Problema 2 - Transações Bancárias Distribuídas 
 
 1. [Utilizando a Aplicação](#utilizando-a-aplicação)
-2. [Solução Proposta](#solução-proposta)
+2. [Introdução](#introdução)
+3. [Solução Proposta](#solução-proposta)
     - [Arquitetura Distribuída](#arquitetura-distribuída)
     - [Módulos do Sistema](#módulos-do-sistema)
     - [Tecnologias Utilizadas](#tecnologias-utilizadas)
     - [Protocolo Two-Phase Commit (2PC)](#protocolo-two-phase-commit-2pc)
     - [Fluxo de Transações](#fluxo-de-transações)
-3. [Conclusão](#conclusão)
+4. [Conclusão](#conclusão)
 
 ## Utilizando A Aplicação 
 Para Utilizar a aplicação desenvolvida é necessário seguir uma sequência de comandos através através do docker:
@@ -57,4 +58,9 @@ Para Utilizar a aplicação desenvolvida é necessário seguir uma sequência de
       docker run --rm --network=host -it -e NUMERO_BANCO=3 -e IP_BANCO1=127.0.0.1 -e IP_BANCO2=127.0.0.2 antnicassio/bank
 
   Vale destacar que as variavéis de ambiente estão disponiveis para serem utilizadas a depender da sua situação.
+
+##Introdução 
+Este projeto é uma solução para um problema proposto para disciplina de Concorrência e Conectividade, da Universidade Estadual de Feira de Santana(UEFS).O contexto foi baseado na ideia de que o governo de um país onde não existe banco central deseja implementar um sistema semelhante ao Pix do Brasil para permitir transações financeiras entre clientes de diferentes bancos. Devido à ausência de um banco central, o sistema não pode utilizar recursos centralizados para controlar as transações, exigindo uma solução distribuída. 
+
+A partir disso, utilizando o python 3.11, foi implementado um sistema bancário distríbuido, em que é possivel fazer operações de contas de diferentes bancos de um mesmo cliente em um único banco,para este propósito, foram utilizadas rotas HTTP, com o auxilio do framework flask, aliado ao javascript, html e css, para construção das telas para utilização.O relatório será dividido em 3 seções, Introdução, Solução Proposta e e Conclusão, além da seção de que explica como utilizaro produto. 
     

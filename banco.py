@@ -110,7 +110,7 @@ class Banco:
     #Função para pegar uma conta de um banco externo para rota externa
     def busca_conta_externa(self, url, nome_banco, numero_conta): 
         try:
-            response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}')
+            response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}', timeout=5)
             if response.status_code == 200:
                 return jsonify( {"conta": response.json().get('conta')} ), 200
             elif response.status_code == 500: 
@@ -121,7 +121,7 @@ class Banco:
     #Função para pegar uma conta de um banco externo para rota interna
     def busca_conta_externa_interna(self, url, nome_banco, numero_conta): 
         try:
-            response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}')
+            response = requests.get(f'{url}/get_conta/{nome_banco}/{numero_conta}', timeout=5)
             if response.status_code == 200:
                 return response
             elif response.status_code == 500: 

@@ -279,7 +279,6 @@ Para implementação da operação de transferência que é um conjuto de de ope
 - **Descrição:** Retorna o nome do banco.
 - **Retorno:** JSON com nome do banco.
 
-
 ##### Preparar Transferência
 
 - **Rota:** `/preparar_transferencia`
@@ -316,6 +315,7 @@ Para implementação da operação de transferência que é um conjuto de de ope
 - `valor`: Valor a ser depositado na conta.
 
 **Funcionalidade:**
+
 1. **Validação de Dados:**
    - Verifica se todos os parâmetros necessários foram fornecidos na requisição.
    - Verifica se o `valor` do depósito é um número positivo.
@@ -338,11 +338,12 @@ Para implementação da operação de transferência que é um conjuto de de ope
 - **Descrição:** Esta rota permite realizar um saque de uma conta específica de um banco.
 
 **Parâmetros de Requisição:**
-- `nome_banco`: Nome do banco onde a conta está registrada.
+
 - `numero_conta`: Número da conta de onde será realizado o saque.
 - `valor`: Valor a ser sacado da conta.
 
 **Funcionalidade:**
+
 1. **Validação de Dados:**
    - Verifica se todos os parâmetros necessários foram fornecidos na requisição.
    - Verifica se o `valor` do saque é um número positivo.
@@ -368,7 +369,6 @@ Para implementação da operação de transferência que é um conjuto de de ope
 **Descrição:** Esta rota realiza a transferência de valores de uma ou mais contas de origem para uma conta de destino. A operação é dividida em duas fases principais: preparação e confirmação.
 
 **Parâmetros de Requisição**
-A requisição deve ser feita no formato JSON e conter os seguintes campos:
 
 - `nome_banco_destino` (string): Nome do banco da conta de destino.
 - `numero_conta_destino` (string): Número da conta de destino.

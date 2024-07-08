@@ -6,7 +6,7 @@
     - [Arquitetura Implementada](#arquitetura-implementada)
     - [Módulos do Sistema](#módulos-do-sistema)
     - [Protocolo Two-Phase Commit (2PC)](#protocolo-two-phase-commit-2pc)
-    - [Rotas principais](#rotas-principais)
+    - [Rotas da Aplicação](#rotas-da-aplicação)
 4. [Conclusão](#conclusão)
 
 ## Utilizando A Aplicação 
@@ -207,3 +207,184 @@ Para implementação da operação de transferência que é um conjuto de de ope
 - A confirmação é feita com uma chamada à função `confirmacao_contas`, que aplica as mudanças de maneira definitiva, fazendo com que a conta destino finalmente receba o dinheiro.
 - Se a confirmação é bem-sucedida, uma mensagem de sucesso é retornada. Caso contrário, a função `desfazer_alterações` é novamente chamada para reverter quaisquer mudanças, garantindo que o sistema retorne ao estado inicial antes da tentativa de transferência.
 
+### Rotas da Aplicação 
+
+#### Cadastro de Pessoa Física
+
+- **Rota:** `/cadastro_pessoa_fisica`
+- **Método:** POST
+- **Descrição:** Cadastra uma pessoa física com nome, CPF e senha.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+#### Cadastro de Pessoa Jurídica
+
+- **Rota:** `/cadastro_pessoa_juridica`
+- **Método:** POST
+- **Descrição:** Cadastra uma pessoa jurídica com nome, CNPJ e senha.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+#### Cadastro de Conta Conjunta
+
+- **Rota:** `/cadastro_conta_conjunta`
+- **Método:** POST
+- **Descrição:** Cria uma conta conjunta associando dois clientes existentes.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+#### Login
+
+- **Rota:** `/login`
+- **Método:** POST
+- **Descrição:** Realiza login de um cliente com CPF/CNPJ e senha.
+- **Retorno:** JSON com mensagem de sucesso ou erro de autenticação.
+
+#### Logout
+
+- **Rota:** `/logout`
+- **Método:** POST
+- **Descrição:** Realiza o logout do cliente logado.
+- **Retorno:** JSON com mensagem de sucesso.
+
+#### Consulta de Contas de Cliente
+
+- **Rota:** `/contas_cliente/<identificador>`
+- **Método:** GET
+- **Descrição:** Retorna todas as contas de um cliente em todos os bancos.
+- **Retorno:** JSON com informações das contas ou mensagem de erro.
+
+#### Consulta de Contas em Banco Específico
+
+- **Rota:** `/get_contas/<identificador>`
+- **Método:** GET
+- **Descrição:** Retorna todas as contas de um cliente em um banco específico.
+- **Retorno:** JSON com informações das contas ou mensagem de erro.
+
+#### Consulta de Conta Específica
+
+- **Rota:** `/get_conta/<nome_banco>/<numero_conta>`
+- **Método:** GET
+- **Descrição:** Retorna informações detalhadas de uma conta específica.
+- **Retorno:** JSON com informações da conta ou mensagem de erro.
+
+#### Informar Identificador do Cliente Logado
+
+- **Rota:** `/get_identificador`
+- **Método:** GET
+- **Descrição:** Retorna o identificador do cliente logado.
+- **Retorno:** JSON com identificador do cliente ou mensagem de erro.
+
+#### Informar Nome do Banco
+
+- **Rota:** `/get_nome_banco`
+- **Método:** GET
+- **Descrição:** Retorna o nome do banco.
+- **Retorno:** JSON com nome do banco.
+
+
+#### Preparar Transferência
+
+- **Rota:** `/preparar_transferencia`
+- **Método:** POST
+- **Descrição:** Prepara uma transferência para uma conta específica.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+#### Confirmar Transferência
+
+- **Rota:** `/confirmar_transferencia`
+- **Método:** POST
+- **Descrição:** Confirma uma transferência para uma conta específica.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+#### Desfazer Transferência
+
+- **Rota:** `/desfazer_transferencia`
+- **Método:** POST
+- **Descrição:** Desfaz uma transferência em uma conta específica.
+- **Retorno:** JSON com mensagem de sucesso ou erro.
+
+Além dessas rotas existem, irei destacar as rotas mais importantes das transações em si  
+
+#### Depósito 
+
+- **Rota:** `/deposito`
+- **Método:** POST
+- **Descrição:** Esta rota permite realizar um depósito em uma conta específica de um banco.
+
+**Parâmetros de Requisição:** 
+
+- `nome_banco`: Nome do banco onde a conta está registrada.
+- `numero_conta`: Número da conta onde o depósito será realizado.
+- `valor`: Valor a ser depositado na conta.
+
+**Funcionalidade:**
+1. **Validação de Dados:**
+   - Verifica se todos os parâmetros necessários foram fornecidos na requisição.
+   - Verifica se o `valor` do depósito é um número positivo.
+  
+2. **Verificação da Conta:**
+   - Consulta a base de dados para verificar se a conta especificada (`numero_conta`) existe no banco (`nome_banco`).
+  
+3. **Atualização do Saldo:**
+   - Obtém o saldo atual da conta.
+   - Adiciona o `valor` do depósito ao saldo existente.
+   - Atualiza o saldo da conta na base de dados.
+
+4. **Resposta da Requisição:**
+   - Retorna uma mensagem JSON indicando sucesso ou falha na operação.
+
+#### Saque 
+
+- **Rota:** `/saque`
+- **Método:** POST
+- **Descrição:** Esta rota permite realizar um saque de uma conta específica de um banco.
+
+**Parâmetros de Requisição:**
+- `nome_banco`: Nome do banco onde a conta está registrada.
+- `numero_conta`: Número da conta de onde será realizado o saque.
+- `valor`: Valor a ser sacado da conta.
+
+**Funcionalidade:**
+1. **Validação de Dados:**
+   - Verifica se todos os parâmetros necessários foram fornecidos na requisição.
+   - Verifica se o `valor` do saque é um número positivo.
+  
+2. **Verificação da Conta:**
+   - Consulta a base de dados para verificar se a conta especificada (`numero_conta`) existe no banco (`nome_banco`).
+  
+3. **Verificação de Saldo Suficiente:**
+   - Obtém o saldo atual da conta.
+   - Verifica se o saldo é suficiente para realizar o saque solicitado (`valor`).
+  
+4. **Atualização do Saldo:**
+   - Subtrai o `valor` do saque do saldo existente na conta.
+   - Atualiza o saldo da conta na base de dados.
+
+5. **Resposta da Requisição:**
+   - Retorna uma mensagem JSON indicando sucesso ou falha na operação.
+
+#### Transferência
+
+**Rota:**`/transferir`
+**Método:** POST
+**Descrição:** Esta rota realiza a transferência de valores de uma ou mais contas de origem para uma conta de destino. A operação é dividida em duas fases principais: preparação e confirmação.
+
+**Parâmetros de Requisição**
+A requisição deve ser feita no formato JSON e conter os seguintes campos:
+
+- `nome_banco_destino` (string): Nome do banco da conta de destino.
+- `numero_conta_destino` (string): Número da conta de destino.
+- `valor_conta_destino` (float): Valor total a ser depositado na conta de destino.
+- `transferencias` (lista de dicionários): Lista das transferências a serem realizadas. Cada item deve conter:
+  - `numero_conta_origem` (string): Número da conta de origem.
+  - `nome_banco_origem` (string): Nome do banco da conta de origem.
+  - `valor` (float): Valor a ser transferido da conta de origem.
+
+**Fluxo da Operação**
+
+1. **Preparação das Contas de Origem**
+   - Verifica se há saldo suficiente em cada conta de origem.
+   - Reserva o valor a ser transferido em cada conta de origem.
+   - Se qualquer conta não puder ser preparada, as alterações são desfeitas e é retornado um erro.
+
+2. **Confirmação das Transferências**
+   - Deduz os valores das contas de origem e adiciona o valor total na conta de destino.
+   - Se a confirmação falhar, as alterações preparadas são desfeitas e é retornado um erro.

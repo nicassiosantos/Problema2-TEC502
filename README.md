@@ -209,70 +209,70 @@ Para implementação da operação de transferência que é um conjuto de de ope
 
 ### Rotas da Aplicação 
 
-#### Cadastro de Pessoa Física
+##### Cadastro de Pessoa Física
 
 - **Rota:** `/cadastro_pessoa_fisica`
 - **Método:** POST
 - **Descrição:** Cadastra uma pessoa física com nome, CPF e senha.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-#### Cadastro de Pessoa Jurídica
+##### Cadastro de Pessoa Jurídica
 
 - **Rota:** `/cadastro_pessoa_juridica`
 - **Método:** POST
 - **Descrição:** Cadastra uma pessoa jurídica com nome, CNPJ e senha.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-#### Cadastro de Conta Conjunta
+##### Cadastro de Conta Conjunta
 
 - **Rota:** `/cadastro_conta_conjunta`
 - **Método:** POST
 - **Descrição:** Cria uma conta conjunta associando dois clientes existentes.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-#### Login
+##### Login
 
 - **Rota:** `/login`
 - **Método:** POST
 - **Descrição:** Realiza login de um cliente com CPF/CNPJ e senha.
 - **Retorno:** JSON com mensagem de sucesso ou erro de autenticação.
 
-#### Logout
+##### Logout
 
 - **Rota:** `/logout`
 - **Método:** POST
 - **Descrição:** Realiza o logout do cliente logado.
 - **Retorno:** JSON com mensagem de sucesso.
 
-#### Consulta de Contas de Cliente
+##### Consulta de Contas de Cliente
 
 - **Rota:** `/contas_cliente/<identificador>`
 - **Método:** GET
 - **Descrição:** Retorna todas as contas de um cliente em todos os bancos.
 - **Retorno:** JSON com informações das contas ou mensagem de erro.
 
-#### Consulta de Contas em Banco Específico
+##### Consulta de Contas em Banco Específico
 
 - **Rota:** `/get_contas/<identificador>`
 - **Método:** GET
 - **Descrição:** Retorna todas as contas de um cliente em um banco específico.
 - **Retorno:** JSON com informações das contas ou mensagem de erro.
 
-#### Consulta de Conta Específica
+##### Consulta de Conta Específica
 
 - **Rota:** `/get_conta/<nome_banco>/<numero_conta>`
 - **Método:** GET
 - **Descrição:** Retorna informações detalhadas de uma conta específica.
 - **Retorno:** JSON com informações da conta ou mensagem de erro.
 
-#### Informar Identificador do Cliente Logado
+##### Informar Identificador do Cliente Logado
 
 - **Rota:** `/get_identificador`
 - **Método:** GET
 - **Descrição:** Retorna o identificador do cliente logado.
 - **Retorno:** JSON com identificador do cliente ou mensagem de erro.
 
-#### Informar Nome do Banco
+##### Informar Nome do Banco
 
 - **Rota:** `/get_nome_banco`
 - **Método:** GET
@@ -280,30 +280,30 @@ Para implementação da operação de transferência que é um conjuto de de ope
 - **Retorno:** JSON com nome do banco.
 
 
-#### Preparar Transferência
+##### Preparar Transferência
 
 - **Rota:** `/preparar_transferencia`
 - **Método:** POST
 - **Descrição:** Prepara uma transferência para uma conta específica.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-#### Confirmar Transferência
+##### Confirmar Transferência
 
 - **Rota:** `/confirmar_transferencia`
 - **Método:** POST
 - **Descrição:** Confirma uma transferência para uma conta específica.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-#### Desfazer Transferência
+##### Desfazer Transferência
 
 - **Rota:** `/desfazer_transferencia`
 - **Método:** POST
 - **Descrição:** Desfaz uma transferência em uma conta específica.
 - **Retorno:** JSON com mensagem de sucesso ou erro.
 
-Além dessas rotas existem, irei destacar as rotas mais importantes das transações em si  
+#### Rotas Principais
 
-#### Depósito 
+##### Depósito 
 
 - **Rota:** `/deposito`
 - **Método:** POST
@@ -331,7 +331,7 @@ Além dessas rotas existem, irei destacar as rotas mais importantes das transaç
 4. **Resposta da Requisição:**
    - Retorna uma mensagem JSON indicando sucesso ou falha na operação.
 
-#### Saque 
+##### Saque 
 
 - **Rota:** `/saque`
 - **Método:** POST
@@ -361,7 +361,7 @@ Além dessas rotas existem, irei destacar as rotas mais importantes das transaç
 5. **Resposta da Requisição:**
    - Retorna uma mensagem JSON indicando sucesso ou falha na operação.
 
-#### Transferência
+##### Transferência
 
 **Rota:**`/transferir`
 **Método:** POST

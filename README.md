@@ -391,3 +391,9 @@ Para implementação da operação de transferência que é um conjuto de de ope
 
 
 ## Conclusão
+
+Através do produto implementado, foi possível a criação de um sistema que realiza o gerenciamento de contas, permitindo a realização de transações entre diferentes bancos.Utilizando um protocolo bem definido entre os bancos do sistema onde cada um reconhece quais dados tem que enviar e qual resposta pode receber para um tratamento adequado.
+
+Além disso foi implementand uma maneira robusta e eficiente com o algoritmo (2PC), que permite que o sistema tenha a possbilidade de tratar duas transações concorrentes, sem problemas no valor do saldo final da conta cliente, aliado ao faot de poder realizar mais transações sem um tempo de espera tão grande, já que ele pode ir tratando de outras transações enquanto realiza outra, já que uma conta não é travada completamente ao receber uma transação, ela apenas trava o acesso quando realiza uma operação que modifique o saldo através do Thread.lock(), e libera logo depois. 
+
+O sistema permite ser escalavél e confiável, tendo a possibilidade de, mesmo que um banco perca uma conexão, não ira ocasionar uma quebra no sistema, apenas as informações que ele provê, não irão serem informadas até que a conexão seja estabelecida novamente.

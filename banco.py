@@ -156,29 +156,26 @@ class Banco:
                 for nome_banco, info in self.bancos.items(): 
                     if nome_banco == nome_banco_origem: 
                         response = self.busca_conta_externa_interna(info['url'],nome_banco_origem,numero_conta_origem)
-                        if response.status_code == 200: 
-                            response = self.preparar_conta_externa(info['url'],numero_conta_origem,nome_banco_origem,valor,"saque")  
+                        try:
                             if response.status_code == 200: 
-                                mensagem = response.json().get('message')
-                                preparacao.append((nome_banco_origem, numero_conta_origem, valor, 'saque'))
+                                response = self.preparar_conta_externa(info['url'],numero_conta_origem,nome_banco_origem,valor,"saque")  
+                                if response.status_code == 200: 
+                                    mensagem = response.json().get('message')
+                                    preparacao.append((nome_banco_origem, numero_conta_origem, valor, 'saque'))
+                                else: 
+                                    mensagem = response.json().get('message')
+                                    preparados = False 
+                                    break
                             else: 
                                 mensagem = response.json().get('message')
                                 preparados = False 
-                                break
-                        else: 
-                            try:
-                                mensagem = response.json().get('message')
-                                preparados = False 
-                                break 
-                            except: 
-                                mensagem = "Banco não encontrado ou fora do ar"
-                                preparados = False 
-                                break
+                                break             
+                        except: 
+                            mensagem = "Banco não encontrado ou fora do ar"
+                            preparados = False 
+                            break
                 if preparados == False: 
                     break 
-            if response == False: 
-                mensagem = "Banco não encontrado ou fora do ar"
-                preparados = False 
 
         return preparados, preparacao, mensagem
     
@@ -212,45 +209,47 @@ class Banco:
                 for nome_banco, info in self.bancos.items(): 
                     if nome_banco == nome_banco_conta: 
                         response = self.confirmacao_conta_externa(info['url'],numero_conta,nome_banco_conta,valor,tipo)  
-                        if response.status_code == 200: 
-                            mensagem = response.json().get('message')
-                        else: 
-                            try:
+                        try:
+                            if response.status_code == 200: 
                                 mensagem = response.json().get('message')
-                                sucesso_confirmacao = False 
-                                break 
-                            except: 
-                                mensagem = "Banco não encontrado ou fora do ar"
-                                sucesso_confirmacao = False 
-                                break
-                if response == False: 
-                    mensagem = "Banco não encontrado"
-                    sucesso_confirmacao = False 
+                            else: 
+                                try:
+                                    mensagem = response.json().get('message')
+                                    sucesso_confirmacao = False 
+                                    break 
+                                except: 
+                                    mensagem = "Banco não encontrado ou fora do ar"
+                                    sucesso_confirmacao = False 
+                                    break
+                        except: 
+                            mensagem = "Banco não encontrado ou fora do ar"
+                            sucesso_confirmacao = False
                 if sucesso_confirmacao == False: 
                     break 
 
-
-        if nome_banco_destino == self.nome:
-                conta_origem = self.busca_conta(numero_conta_destino)
-                if not conta_origem:
-                    mensagem = "Conta não encontrada"
-                    sucesso_confirmacao = False  
-                conta_origem.lock.acquire(blocking=True)
-                sucesso_confirmacao, mensagem = conta_origem.confirmar_transferencia(nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1)
-                conta_origem.lock.release()
-        else: 
-            for nome_banco, info in self.bancos.items(): 
-                if nome_banco == nome_banco_destino: 
-                    response = self.confirmacao_conta_externa(info['url'],numero_conta_destino,nome_banco_destino,valor_conta_destino,tipo1)  
-                    if response.status_code == 200: 
-                        mensagem = response.json().get('message')
-                    else: 
-                        mensagem = response.json().get('message')
-                        sucesso_confirmacao = False 
-                        break
-            if response == False: 
-                mensagem = "Banco não encontrado"
-                sucesso_confirmacao = False
+        if sucesso_confirmacao:
+            if nome_banco_destino == self.nome:
+                    conta_origem = self.busca_conta(numero_conta_destino)
+                    if not conta_origem:
+                        mensagem = "Conta não encontrada"
+                        sucesso_confirmacao = False  
+                    conta_origem.lock.acquire(blocking=True)
+                    sucesso_confirmacao, mensagem = conta_origem.confirmar_transferencia(nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1)
+                    conta_origem.lock.release()
+            else: 
+                for nome_banco, info in self.bancos.items(): 
+                    if nome_banco == nome_banco_destino: 
+                        response = self.confirmacao_conta_externa(info['url'],numero_conta_destino,nome_banco_destino,valor_conta_destino,tipo1)  
+                        try:
+                            if response.status_code == 200: 
+                                mensagem = response.json().get('message')
+                            else: 
+                                mensagem = response.json().get('message')
+                                sucesso_confirmacao = False 
+                                break 
+                        except: 
+                            mensagem = "Banco não encontrado ou fora do ar"
+                            sucesso_confirmacao = False
 
         return sucesso_confirmacao, mensagem
 

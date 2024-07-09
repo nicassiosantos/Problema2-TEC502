@@ -117,7 +117,8 @@ class Banco:
                 return jsonify({'message': response.json().get('message')}), 500
         except Exception as e: 
             print(f"Exceção: {e}")
-    
+            return jsonify({'message': "Banco não encontrado ou fora do ar"}), 500
+        
     #Função para pegar uma conta de um banco externo para rota interna
     def busca_conta_externa_interna(self, url, nome_banco, numero_conta): 
         try:
@@ -165,11 +166,19 @@ class Banco:
                                 preparados = False 
                                 break
                         else: 
-                            mensagem = response.json().get('message')
-                            preparados = False 
-                            break
+                            try:
+                                mensagem = response.json().get('message')
+                                preparados = False 
+                                break 
+                            except: 
+                                mensagem = "Banco não encontrado ou fora do ar"
+                                preparados = False 
+                                break
                 if preparados == False: 
                     break 
+            if response == False: 
+                mensagem = "Banco não encontrado ou fora do ar"
+                preparados = False 
 
         return preparados, preparacao, mensagem
     
@@ -182,9 +191,9 @@ class Banco:
                 return response
             elif response.status_code == 500: 
                 return response
-                #return jsonify({'message': response.json().get('message')}), 500
         except Exception as e: 
             print(f"Exceção: {e}")
+            return False
 
     #Função para realizar a confirmação de contas de para realizar transferencia  
     def confirmacao_contas(self, preparacao, sucesso_confirmacao, nome_banco_destino, numero_conta_destino, valor_conta_destino, tipo1):
@@ -206,9 +215,14 @@ class Banco:
                         if response.status_code == 200: 
                             mensagem = response.json().get('message')
                         else: 
-                            mensagem = response.json().get('message')
-                            sucesso_confirmacao = False 
-                            break
+                            try:
+                                mensagem = response.json().get('message')
+                                sucesso_confirmacao = False 
+                                break 
+                            except: 
+                                mensagem = "Banco não encontrado ou fora do ar"
+                                sucesso_confirmacao = False 
+                                break
                 if response == False: 
                     mensagem = "Banco não encontrado"
                     sucesso_confirmacao = False 
@@ -253,6 +267,7 @@ class Banco:
                 #return jsonify({'message': response.json().get('message')}), 500
         except Exception as e: 
             print(f"Exceção: {e}")
+            return False
 
     #Função para desfazer alterações feitas nas contas (Rollback)
     def desfazer_alterações(self, preparacao, sucesso): 
